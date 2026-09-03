@@ -36,10 +36,13 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 - [x] Édition de nœuds : sélection d'une liane, déplacement des points d'ancrage
 - [x] Poignées Bézier éditables par nœud (glisser-déposer, continuité lisse en miroir)
 - [x] Mode « Points » : poser le squelette clic par clic plutôt qu'à main levée
-- [ ] Multi-tracés et connexions : dessiner une branche secondaire qui naît d'une
-      branche principale, avec ajustement propre de l'épaisseur à la jonction —
-      identifié dans le plan initial comme le plus gros défi mathématique du projet
-      (opérations booléennes sur polygones, type bibliothèque Clipper)
+- [x] Multi-tracés et connexions : démarrer un tracé à proximité d'une liane
+      existante en fait une branche, ancrée dessus ; à l'export, les contours de
+      tige de toute une grappe (liane + branches) sont fusionnés en un seul chemin
+      par opération booléenne (`polygon-clipping`) — plus de double-trait à la
+      jonction. Voir [`docs/how-to/creer-une-branche.md`](docs/how-to/creer-une-branche.md).
+      Limite connue : la racine d'une branche n'est pas re-accrochée
+      automatiquement si on édite ensuite les nœuds de la liane parente.
 - [ ] Masques d'écrêtage : définir une zone de travail (ex. la forme d'un pickguard)
       pour que les lianes ne dépassent jamais de la zone délimitée
 - [ ] Nœud « coin » (poignées indépendantes, non miroir) en plus du nœud lisse actuel

@@ -22,6 +22,7 @@ src/
 | `stem.ts` | Profil d'épaisseur (`widthProfile`, fin aux extrémités) et génération du polygone fermé de la tige (`buildStemPath`). |
 | `brush.ts` | `placeBrush()` : marche le long de la courbe par pas d'arc, calcule position/angle/échelle de chaque instance de motif et lui assigne un `motifId` selon la séquence active. |
 | `vine.ts` | Point d'entrée du moteur : `nodesFromStroke`/`nodesFromClicks` (création) et `regenerateVine` (recalcul tige+motifs à partir des nœuds courants — appelé à la création comme à chaque édition). |
+| `junction.ts` | `unionStemPolygons()` : fusionne par opération booléenne (bibliothèque `polygon-clipping`) les polygones de tige d'une liane et de ses branches en un seul contour, pour l'export — voir [Créer une branche](../how-to/creer-une-branche.md). |
 
 `core/` ne connaît que des chaînes `motifId` — jamais de `pathD` SVG ni de couleur, voir
 [Ajouter un nouveau motif](../how-to/ajouter-un-motif.md).
@@ -46,10 +47,11 @@ src/
 ```
 geste utilisateur (souris/tactile/clics)
   → pointerCapture / clickToPlace          (ui, coordonnées SVG brutes)
+  → findAttachment                         (main.ts, accroche à une liane voisine → parentId)
   → simplifyRDP + autoHandles              (core, → EditableNode[])
   → regenerateVine                         (core, à chaque édition aussi)
       → buildCurveFromNodes                (core, → CurveSample[])
-      → buildStemPath                      (core, → path tige)
+      → buildStemPolygon + polygonToPath   (core, → polygone + path tige, sans amincir la racine d'une branche)
       → placeBrush                         (core, → BrushPlacement[] avec motifId)
   → renderer.updateVine                    (ui, résout motifId → pathD, écrit le DOM)
 ```
@@ -57,3 +59,8 @@ geste utilisateur (souris/tactile/clics)
 Un nœud reste vivant tant que sa liane existe : toute édition (glisser un point, une
 poignée, changer un curseur) relance `regenerateVine` sur les mêmes nœuds — rien n'est
 jamais figé avant l'export.
+
+À l'écran, chaque liane (branches comprises) garde son propre `<path>` de tige
+indépendant — c'est ce qui permet de cliquer précisément sur l'une d'elles pour la
+sélectionner. Seul l'export regroupe les lianes reliées par une chaîne de branches et
+fusionne leurs polygones via `unionStemPolygons()` en un contour unique.

@@ -21,6 +21,9 @@ export interface BrushOptions {
   baseAngleDeg?: number;
   /** Séquence de motifs à faire alterner le long de la tige (répétée en boucle). */
   sequence: string[];
+  /** Comme pour la tige (voir stem.ts) : désactiver le rétrécissement à la racine d'une branche. */
+  taperStart?: boolean;
+  taperEnd?: boolean;
 }
 
 function angleOf(v: Point): number {
@@ -58,7 +61,11 @@ export function placeBrush(curve: CurveSample[], opts: BrushOptions): BrushPlace
     const [sample, idx] = sampleAtArcLength(curve, d, searchIndex);
     searchIndex = idx;
 
-    const taper = widthProfile(sample.t, 1, 0.15); // 0..1, coïncide avec le profil de la tige
+    const taper = widthProfile(sample.t, 1, {
+      taperFraction: 0.15,
+      taperStart: opts.taperStart,
+      taperEnd: opts.taperEnd,
+    }); // 0..1, coïncide avec le profil de la tige
     const jitterScale = 1 + (Math.random() - 0.5) * jitter * 0.6;
     const scale = baseScale * (0.1 + 0.9 * taper) * jitterScale;
 

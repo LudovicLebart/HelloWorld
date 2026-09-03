@@ -14,6 +14,24 @@ interface VineGroup {
   leavesLayer: SVGGElement;
 }
 
+export interface ExportCluster {
+  /** Contour de tige déjà fusionné (une seule liane, ou plusieurs à une jonction en Y — voir junction.ts). */
+  stemPathD: string;
+  /** Les feuilles restent groupées par liane d'origine, même au sein d'une grappe fusionnée. */
+  leafGroups: BrushPlacement[][];
+}
+
+function createLeafElement(leaf: BrushPlacement): SVGPathElement {
+  const motif = getMotif(leaf.motifId);
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("class", `motif-instance ${motif.className}`);
+  path.setAttribute("d", motif.pathD);
+  const deg = (leaf.angle * 180) / Math.PI;
+  const scale = leaf.scale * motif.scaleFactor;
+  path.setAttribute("transform", `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${scale})`);
+  return path;
+}
+
 export class Renderer {
   private svg: SVGSVGElement;
   private vinesLayer: SVGGElement;
@@ -76,14 +94,7 @@ export class Renderer {
 
     vine.leavesLayer.replaceChildren();
     for (const leaf of leaves) {
-      const motif = getMotif(leaf.motifId);
-      const path = document.createElementNS(SVG_NS, "path");
-      path.setAttribute("class", `motif-instance ${motif.className}`);
-      path.setAttribute("d", motif.pathD);
-      const deg = (leaf.angle * 180) / Math.PI;
-      const scale = leaf.scale * motif.scaleFactor;
-      path.setAttribute("transform", `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${scale})`);
-      vine.leavesLayer.appendChild(path);
+      vine.leavesLayer.appendChild(createLeafElement(leaf));
     }
   }
 
@@ -93,17 +104,53 @@ export class Renderer {
     this.setLiveStroke(null);
   }
 
-  /** Sérialise le canevas en SVG autonome, prêt pour l'export (calques Tige / Feuilles séparés). */
-  exportSVG(): string {
-    const clone = this.svg.cloneNode(true) as SVGSVGElement;
-    clone.querySelectorAll(".live-stroke, #node-editor").forEach((el) => el.remove());
-    clone.setAttribute("xmlns", SVG_NS);
-
+  /**
+   * Construit un document SVG autonome à partir de grappes déjà fusionnées
+   * (une grappe = une liane racine et ses branches, contour de tige unique) —
+   * reconstruit depuis les données plutôt que cloné depuis le DOM live,
+   * puisque l'affichage en direct garde une tige distincte par liane (pour
+   * la sélection au clic) alors que l'export doit livrer un contour soudé,
+   * sans double-trait à la jonction. Voir junction.ts.
+   */
+  exportSVG(clusters: ExportCluster[]): string {
     const rect = this.svg.getBoundingClientRect();
-    clone.setAttribute("width", String(Math.round(rect.width)));
-    clone.setAttribute("height", String(Math.round(rect.height)));
-    clone.setAttribute("viewBox", `0 0 ${Math.round(rect.width)} ${Math.round(rect.height)}`);
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
 
-    return new XMLSerializer().serializeToString(clone);
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("xmlns", SVG_NS);
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+    const vinesLayer = document.createElementNS(SVG_NS, "g");
+    vinesLayer.setAttribute("id", "vines");
+    svg.appendChild(vinesLayer);
+
+    for (const cluster of clusters) {
+      const group = document.createElementNS(SVG_NS, "g");
+      group.setAttribute("class", "vine");
+
+      const stemLayer = document.createElementNS(SVG_NS, "g");
+      stemLayer.setAttribute("class", "layer-stem");
+      const stem = document.createElementNS(SVG_NS, "path");
+      stem.setAttribute("class", "stem-path");
+      stem.setAttribute("d", cluster.stemPathD);
+      stemLayer.appendChild(stem);
+      group.appendChild(stemLayer);
+
+      for (const leaves of cluster.leafGroups) {
+        const leavesLayer = document.createElementNS(SVG_NS, "g");
+        leavesLayer.setAttribute("class", "layer-leaves");
+        for (const leaf of leaves) {
+          leavesLayer.appendChild(createLeafElement(leaf));
+        }
+        group.appendChild(leavesLayer);
+      }
+
+      vinesLayer.appendChild(group);
+    }
+
+    return new XMLSerializer().serializeToString(svg);
   }
 }

@@ -1,8 +1,10 @@
 import "./style.css";
-import type { EditableNode, Point } from "./core/types";
+import type { CurveSample, EditableNode, Point } from "./core/types";
+import type { BrushPlacement } from "./core/brush";
 import { nodesFromStroke, nodesFromClicks, regenerateVine, type VineParams } from "./core/vine";
+import { unionStemPolygons } from "./core/junction";
 import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
-import { Renderer } from "./ui/renderer";
+import { Renderer, type ExportCluster } from "./ui/renderer";
 import { NodeEditor } from "./ui/nodeEditor";
 
 const svg = document.querySelector<SVGSVGElement>("#canvas")!;
@@ -29,15 +31,24 @@ type Mode = "freehand" | "points";
 
 interface VineState {
   nodes: EditableNode[];
+  /** Liane dont celle-ci est une branche, le cas échéant — voir findAttachment(). */
+  parentId?: string;
+  /** Dernier rendu généré : mis en cache pour éviter tout recalcul (donc tout écart) entre l'écran et l'export. */
+  curve: CurveSample[];
+  stemPolygon: Point[];
+  leaves: BrushPlacement[];
 }
 
 const vines = new Map<string, VineState>();
 let selectedId: string | null = null;
 let pendingClickPoints: Point[] = [];
+let pendingParentId: string | null = null;
+let pendingSnapPoint: Point | null = null;
 let detachInteraction: () => void = () => {};
 
 const MIN_EPSILON = 0.5; // px : beaucoup de points, suit la main de très près
 const MAX_EPSILON = 12; // px : très simplifié, peu de points
+const BRANCH_SNAP_RADIUS = 16; // px : distance sous laquelle un nouveau tracé s'accroche à une liane existante
 
 function currentEpsilon(): number {
   const density = Number(densityInput.value); // 0 (épars) .. 100 (dense)
@@ -63,6 +74,35 @@ function currentParams(): VineParams {
   };
 }
 
+/** Recalcule tige+feuilles d'une liane à partir de ses nœuds courants, met en cache le résultat (curve/polygone/feuilles, réutilisés tels quels à l'export) et rafraîchit son rendu. */
+function regenerateAndRender(id: string): void {
+  const vine = vines.get(id);
+  if (!vine) return;
+  const { curve, stemPolygon, stemPathD, leaves } = regenerateVine(vine.nodes, {
+    ...currentParams(),
+    taperStart: !vine.parentId,
+    taperEnd: true,
+  });
+  vine.curve = curve;
+  vine.stemPolygon = stemPolygon;
+  vine.leaves = leaves;
+  renderer.updateVine(id, stemPathD, leaves);
+}
+
+/** Cherche le point le plus proche sur une liane existante : sert à accrocher le début d'un nouveau tracé pour en faire une branche. */
+function findAttachment(point: Point): { parentId: string; point: Point } | null {
+  let best: { parentId: string; point: Point; dist: number } | null = null;
+  for (const [id, vine] of vines) {
+    for (const sample of vine.curve) {
+      const dist = Math.hypot(sample.point.x - point.x, sample.point.y - point.y);
+      if (dist <= BRANCH_SNAP_RADIUS && (!best || dist < best.dist)) {
+        best = { parentId: id, point: sample.point, dist };
+      }
+    }
+  }
+  return best ? { parentId: best.parentId, point: best.point } : null;
+}
+
 function deselect(): void {
   selectedId = null;
   nodeEditor.hide();
@@ -72,18 +112,14 @@ function selectVine(id: string): void {
   selectedId = id;
   const vine = vines.get(id);
   if (!vine) return;
-  nodeEditor.show(vine.nodes, () => {
-    const { stemPathD, leaves } = regenerateVine(vine.nodes, currentParams());
-    renderer.updateVine(id, stemPathD, leaves);
-  });
+  nodeEditor.show(vine.nodes, () => regenerateAndRender(id));
 }
 
-function createVineFromNodes(nodes: EditableNode[]): void {
+function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
   if (nodes.length < 2) return;
   const id = renderer.createVine(() => selectVine(id));
-  vines.set(id, { nodes });
-  const { stemPathD, leaves } = regenerateVine(nodes, currentParams());
-  renderer.updateVine(id, stemPathD, leaves);
+  vines.set(id, { nodes, parentId, curve: [], stemPolygon: [], leaves: [] });
+  regenerateAndRender(id);
   selectVine(id);
 }
 
@@ -98,12 +134,15 @@ function finishPointsVine(): void {
   renderer.setLiveStroke(null);
   const nodes = nodesFromClicks(pendingClickPoints);
   pendingClickPoints = [];
-  createVineFromNodes(nodes);
+  createVineFromNodes(nodes, pendingParentId ?? undefined);
+  pendingParentId = null;
 }
 
 function setMode(next: Mode): void {
   detachInteraction();
   pendingClickPoints = [];
+  pendingParentId = null;
+  pendingSnapPoint = null;
   renderer.setLiveStroke(null);
   deselect();
 
@@ -113,17 +152,32 @@ function setMode(next: Mode): void {
 
   if (next === "freehand") {
     detachInteraction = attachPointerCapture(svg, {
-      onStrokeStart: () => deselect(),
+      onStrokeStart: (point) => {
+        deselect();
+        const attach = findAttachment(point);
+        pendingParentId = attach?.parentId ?? null;
+        pendingSnapPoint = attach?.point ?? null;
+      },
       onStrokeMove: (points) => renderer.setLiveStroke(points),
       onStrokeEnd: (points) => {
         renderer.setLiveStroke(null);
-        createVineFromNodes(nodesFromStroke(points, currentEpsilon()));
+        // Accroche le tout premier point du tracé exactement sur la liane parente,
+        // pour garantir que la racine de la branche s'enfonce bien dans sa tige.
+        const raw = pendingSnapPoint ? [pendingSnapPoint, ...points.slice(1)] : points;
+        createVineFromNodes(nodesFromStroke(raw, currentEpsilon()), pendingParentId ?? undefined);
+        pendingParentId = null;
+        pendingSnapPoint = null;
       },
     });
   } else {
     detachInteraction = attachClickToPlace(svg, {
       onAdd: (p) => {
         if (selectedId) deselect();
+        if (pendingClickPoints.length === 0) {
+          const attach = findAttachment(p);
+          pendingParentId = attach?.parentId ?? null;
+          p = attach?.point ?? p;
+        }
         pendingClickPoints.push(p);
         renderer.setLiveStroke(pendingClickPoints);
       },
@@ -142,11 +196,7 @@ finishButton.addEventListener("click", () => {
 
 // Ajuster un curseur ou une case à cocher met à jour la liane sélectionnée en direct (édition non-destructive).
 function refreshSelectedVine(): void {
-  if (!selectedId) return;
-  const vine = vines.get(selectedId);
-  if (!vine) return;
-  const { stemPathD, leaves } = regenerateVine(vine.nodes, currentParams());
-  renderer.updateVine(selectedId, stemPathD, leaves);
+  if (selectedId) regenerateAndRender(selectedId);
 }
 
 for (const input of [spacingInput, scaleInput, jitterInput, thicknessInput]) {
@@ -163,8 +213,36 @@ clearButton.addEventListener("click", () => {
   pendingClickPoints = [];
 });
 
+/** Remonte à la liane racine (celle sans parent) d'une chaîne de branches, pour regrouper toute la grappe à l'export. */
+function rootOf(id: string): string {
+  let current = id;
+  const seen = new Set<string>();
+  while (true) {
+    const vine = vines.get(current);
+    if (!vine?.parentId || seen.has(current)) return current;
+    seen.add(current);
+    current = vine.parentId;
+  }
+}
+
+/** Groupe les lianes par grappe (racine + ses branches) et fusionne le contour de tige de chaque grappe. */
+function buildExportClusters(): ExportCluster[] {
+  const grouped = new Map<string, string[]>();
+  for (const id of vines.keys()) {
+    const root = rootOf(id);
+    if (!grouped.has(root)) grouped.set(root, []);
+    grouped.get(root)!.push(id);
+  }
+
+  return [...grouped.values()].map((ids) => {
+    const polygons = ids.map((id) => vines.get(id)!.stemPolygon);
+    const leafGroups = ids.map((id) => vines.get(id)!.leaves);
+    return { stemPathD: unionStemPolygons(polygons), leafGroups };
+  });
+}
+
 exportButton.addEventListener("click", () => {
-  const svgString = renderer.exportSVG();
+  const svgString = renderer.exportSVG(buildExportClusters());
   const blob = new Blob([svgString], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

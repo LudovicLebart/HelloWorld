@@ -20,6 +20,7 @@ entre deux quadrants, c'est qu'elle devrait être scindée.
 - Tutoriels : [Tracer sa première liane](tutorials/premiere-liane.md)
 - Guides pratiques : [Exporter pour CNC/laser](how-to/exporter-pour-cnc-laser.md) ·
   [Éditer une liane existante](how-to/editer-une-liane.md) ·
+  [Créer une branche (jonction en Y)](how-to/creer-une-branche.md) ·
   [Ajouter un nouveau motif](how-to/ajouter-un-motif.md)
 - Référence : [Architecture des modules](reference/architecture.md) ·
   [Paramètres de l'interface](reference/parametres.md)

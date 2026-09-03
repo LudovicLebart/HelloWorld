@@ -47,3 +47,5 @@ Cliquez sur **Exporter SVG**. Le fichier téléchargé contient des chemins ferm
 
 Vous savez maintenant tracer, varier et exporter une liane. Pour poser un squelette
 nœud par nœud plutôt qu'à main levée, essayez le mode **Points** de la barre d'outils.
+Pour faire naître une branche depuis cette liane, voir
+[Créer une branche](../how-to/creer-une-branche.md).
