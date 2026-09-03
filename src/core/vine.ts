@@ -1,6 +1,6 @@
 import type { CurveSample, EditableNode, Point } from "./types";
 import { simplifyRDP } from "./simplify";
-import { autoHandles, buildCurveFromNodes } from "./spline";
+import { autoHandles, buildCurveFromNodes, insertNodeAt, removeNodeAt, nearestSegmentIndex } from "./spline";
 import { buildStemPolygon, polygonToPath } from "./stem";
 import { placeBrush, type BrushOptions, type BrushPlacement } from "./brush";
 
@@ -30,6 +30,9 @@ export function nodesFromStroke(rawPoints: Point[], simplifyEpsilon: number): Ed
 export function nodesFromClicks(points: Point[]): EditableNode[] {
   return autoHandles(points);
 }
+
+/** Ajoute/retire un nœud sur une liane existante — voir spline.ts pour le recalcul local des poignées. */
+export { insertNodeAt, removeNodeAt, nearestSegmentIndex };
 
 /** Recalcule la tige et les feuilles à partir de l'état courant des nœuds — appelé à la création comme à chaque édition. */
 export function regenerateVine(nodes: EditableNode[], params: VineParams): VineRenderData {

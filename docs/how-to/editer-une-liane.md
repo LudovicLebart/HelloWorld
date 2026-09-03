@@ -22,6 +22,14 @@ pour garder une jonction lisse de part et d'autre du nœud — comme un point «
 dans Illustrator ou Inkscape. Il n'y a pas encore de point « coin » (poignées
 indépendantes) dans cette version.
 
+## Ajouter ou retirer un point
+
+Double-cliquez sur la tige, entre deux points d'ancrage, pour y insérer un nouveau
+nœud (poignées recalculées localement pour lui et ses deux voisins immédiats — le
+reste de la courbe ne bouge pas). Double-cliquez sur un cercle rouge pour retirer ce
+nœud (au moins deux nœuds doivent toujours rester, sans quoi la courbe n'a plus de
+sens : la suppression est ignorée si la liane n'en a plus que deux).
+
 ## Changer l'habillage d'une seule liane
 
 Les curseurs **Espacement**, **Échelle**, **Jitter**, **Épaisseur tige** et les cases
@@ -31,8 +39,7 @@ font que définir les réglages du **prochain** tracé.
 
 ## Limites actuelles
 
-- Pas d'annulation (undo/redo) : une modification de nœud est immédiate et définitive.
-- Pas de branches secondaires : chaque liane est une courbe simple, sans jonction en Y
-  avec une autre liane.
-- Rien n'est sauvegardé entre deux sessions — un rechargement de page efface tout le
-  canevas.
+- Pas encore de point « coin » (poignées indépendantes, non miroir).
+- La racine d'une branche n'est pas re-accrochée automatiquement si vous éditez
+  ensuite les nœuds de la liane parente — voir
+  [Créer une branche](creer-une-branche.md).

@@ -32,6 +32,8 @@ export interface NodeEditorCallbacks {
   onChange: () => void;
   /** Une fois, au relâchement : point d'accroche pour persister le résultat final. */
   onDragEnd?: () => void;
+  /** Double-clic sur une ancre : demande la suppression de ce nœud. */
+  onRemoveNode?: (index: number) => void;
 }
 
 export class NodeEditor {
@@ -117,6 +119,10 @@ export class NodeEditor {
       n.handleIn.y += delta.y;
       n.handleOut.x += delta.x;
       n.handleOut.y += delta.y;
+    });
+    circle.addEventListener("dblclick", (e: MouseEvent) => {
+      e.stopPropagation();
+      this.callbacks?.onRemoveNode?.(index);
     });
     return circle;
   }

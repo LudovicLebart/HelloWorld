@@ -69,6 +69,8 @@ export interface StemDragCallbacks {
   onBranchStart?: (point: Point) => void;
   onBranchMove: (points: Point[]) => void;
   onBranchEnd: (points: Point[]) => void;
+  /** Double-clic sur la tige : insérer un nouveau nœud à cet endroit. */
+  onInsertNode?: (point: Point) => void;
 }
 
 /**
@@ -117,6 +119,13 @@ export function attachStemDrag(svg: SVGSVGElement, stem: SVGPathElement, callbac
     stem.addEventListener("pointermove", onMove);
     stem.addEventListener("pointerup", onUp);
     stem.addEventListener("pointercancel", onUp);
+  });
+
+  // Toujours stoppée (même sans onInsertNode) : sans quoi un double-clic sur la tige
+  // fuiterait vers le double-clic du canevas qui termine un tracé en mode "Points".
+  stem.addEventListener("dblclick", (e: MouseEvent) => {
+    e.stopPropagation();
+    callbacks.onInsertNode?.(svgPointFromEvent(svg, e));
   });
 }
 

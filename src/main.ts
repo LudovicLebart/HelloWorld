@@ -7,6 +7,9 @@ import {
   regenerateVine,
   serializeVines,
   deserializeVines,
+  insertNodeAt,
+  removeNodeAt,
+  nearestSegmentIndex,
   type VineParams,
 } from "./core/vine";
 import { unionStemPolygons } from "./core/junction";
@@ -145,10 +148,34 @@ function selectVine(id: string): void {
     onDragStart: () => pushUndo(),
     onChange: () => regenerateAndRender(id, liveParams(vine.parentId)),
     onDragEnd: () => saveSnapshot(),
+    onRemoveNode: (index) => removeNodeFromVine(id, index),
   });
 }
 
-/** Câble les gestes de la tige (tap = sélection, drag = nouvelle branche) — partagé entre création et restauration d'un instantané. */
+/** Insère un nouveau nœud sur une liane existante (double-clic sur sa tige) et resélectionne pour rafraîchir l'éditeur de nœuds. */
+function insertNodeIntoVine(id: string, point: Point): void {
+  const vine = vines.get(id);
+  if (!vine) return;
+  pushUndo();
+  const index = nearestSegmentIndex(vine.nodes, point);
+  vine.nodes = insertNodeAt(vine.nodes, index);
+  regenerateAndRender(id, liveParams(vine.parentId));
+  selectVine(id);
+  saveSnapshot();
+}
+
+/** Retire un nœud d'une liane existante (double-clic sur son ancre) — au moins 2 nœuds doivent rester pour garder une courbe valide. */
+function removeNodeFromVine(id: string, index: number): void {
+  const vine = vines.get(id);
+  if (!vine || vine.nodes.length <= 2) return;
+  pushUndo();
+  vine.nodes = removeNodeAt(vine.nodes, index);
+  regenerateAndRender(id, liveParams(vine.parentId));
+  selectVine(id);
+  saveSnapshot();
+}
+
+/** Câble les gestes de la tige (tap = sélection, drag = nouvelle branche, double-clic = insérer un nœud) — partagé entre création et restauration d'un instantané. */
 function wireVine(id: string): void {
   renderer.createVine(id, {
     onTap: () => selectVine(id),
@@ -157,6 +184,7 @@ function wireVine(id: string): void {
       renderer.setLiveStroke(null);
       createVineFromNodes(nodesFromStroke(points, currentEpsilon()), id);
     },
+    onInsertNode: (point) => insertNodeIntoVine(id, point),
   });
 }
 

@@ -8,6 +8,17 @@ function normalize(v: Point): Point {
   return { x: v.x / len, y: v.y / len };
 }
 
+/** Calcule les poignées lissées d'un point d'après ses voisins immédiats (tangente commune, longueur proportionnelle à la distance de chaque côté). */
+function smoothedHandles(prev: Point, p: Point, next: Point, smoothing: number): Pick<EditableNode, "handleIn" | "handleOut"> {
+  const tangent = normalize({ x: next.x - prev.x, y: next.y - prev.y });
+  const distPrev = Math.hypot(p.x - prev.x, p.y - prev.y);
+  const distNext = Math.hypot(next.x - p.x, next.y - p.y);
+  return {
+    handleIn: { x: p.x - tangent.x * distPrev * smoothing, y: p.y - tangent.y * distPrev * smoothing },
+    handleOut: { x: p.x + tangent.x * distNext * smoothing, y: p.y + tangent.y * distNext * smoothing },
+  };
+}
+
 /**
  * Calcule des poignées de contrôle par défaut pour une suite de points bruts
  * (typiquement issus de la simplification RDP), de façon à produire une
@@ -18,18 +29,64 @@ export function autoHandles(points: Point[], smoothing = 0.25): EditableNode[] {
   return points.map((p, i) => {
     const prev = points[Math.max(0, i - 1)];
     const next = points[Math.min(points.length - 1, i + 1)];
-    const tangent = normalize({ x: next.x - prev.x, y: next.y - prev.y });
-    const distPrev = Math.hypot(p.x - prev.x, p.y - prev.y);
-    const distNext = Math.hypot(next.x - p.x, next.y - p.y);
-    return {
-      point: { x: p.x, y: p.y },
-      handleIn: { x: p.x - tangent.x * distPrev * smoothing, y: p.y - tangent.y * distPrev * smoothing },
-      handleOut: { x: p.x + tangent.x * distNext * smoothing, y: p.y + tangent.y * distNext * smoothing },
-    };
+    return { point: { x: p.x, y: p.y }, ...smoothedHandles(prev, p, next, smoothing) };
   });
 }
 
-function bezierPoint(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
+/** Ré-applique des poignées lissées aux nœuds `center-1..center+1` (clampé aux bornes) — les autres nœuds ne sont pas touchés. */
+function resmoothAround(nodes: EditableNode[], center: number, smoothing: number): EditableNode[] {
+  const result = [...nodes];
+  for (const i of [center - 1, center, center + 1]) {
+    if (i < 0 || i >= result.length) continue;
+    const prev = result[Math.max(0, i - 1)].point;
+    const next = result[Math.min(result.length - 1, i + 1)].point;
+    const p = result[i].point;
+    result[i] = { point: p, ...smoothedHandles(prev, p, next, smoothing) };
+  }
+  return result;
+}
+
+/** Distance d'un point au segment [a, b] (projection bornée, contrairement à une distance à la droite infinie). */
+function distanceToSegment(p: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/** Trouve l'index i du segment [nodes[i], nodes[i+1]] le plus proche d'un point — sert à choisir où insérer un nouveau nœud. */
+export function nearestSegmentIndex(nodes: EditableNode[], point: Point): number {
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const dist = distanceToSegment(point, nodes[i].point, nodes[i + 1].point);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/** Insère un nouveau nœud au milieu du segment de courbe [index, index+1] — poignées recalculées localement pour lui et ses voisins immédiats, les autres nœuds ne sont pas affectés. */
+export function insertNodeAt(nodes: EditableNode[], index: number, smoothing = 0.25): EditableNode[] {
+  const a = nodes[index];
+  const b = nodes[index + 1];
+  const point = bezierPoint(a.point, a.handleOut, b.handleIn, b.point, 0.5);
+  const result = [...nodes];
+  result.splice(index + 1, 0, { point, handleIn: point, handleOut: point });
+  return resmoothAround(result, index + 1, smoothing);
+}
+
+/** Retire le nœud `index` — poignées de ses anciens voisins, désormais adjacents, recalculées localement. */
+export function removeNodeAt(nodes: EditableNode[], index: number, smoothing = 0.25): EditableNode[] {
+  const result = nodes.filter((_, i) => i !== index);
+  return resmoothAround(result, index, smoothing);
+}
+
+export function bezierPoint(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
   const mt = 1 - t;
   const a = mt * mt * mt;
   const b = 3 * mt * mt * t;

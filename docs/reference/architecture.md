@@ -19,7 +19,7 @@ src/
 | --- | --- |
 | `types.ts` | `Point`, `EditableNode` (nœud + poignées Bézier), `CurveSample` (point échantillonné + tangente/normale/longueur d'arc). |
 | `simplify.ts` | Ramer-Douglas-Peucker : réduit un tracé brut à ses points de contrôle significatifs. |
-| `spline.ts` | `autoHandles()` calcule des poignées lissées par défaut ; `buildCurveFromNodes()` échantillonne la courbe de Bézier composite à pas régulier et calcule tangente/normale en chaque point. |
+| `spline.ts` | `autoHandles()` calcule des poignées lissées par défaut ; `buildCurveFromNodes()` échantillonne la courbe de Bézier composite à pas régulier et calcule tangente/normale en chaque point. `insertNodeAt`/`removeNodeAt` ajoutent/retirent un nœud sur une liane existante (poignées relissées localement autour du point touché seulement) ; `nearestSegmentIndex` trouve le segment le plus proche d'un point cliqué, pour choisir où insérer. |
 | `stem.ts` | Profil d'épaisseur (`widthProfile`, fin aux extrémités) et génération du polygone fermé de la tige (`buildStemPath`). |
 | `brush.ts` | `placeBrush()` : marche le long de la courbe par pas d'arc, calcule position/angle/échelle de chaque instance de motif et lui assigne un `motifId` selon la séquence active. |
 | `vine.ts` | Point d'entrée du moteur : `nodesFromStroke`/`nodesFromClicks` (création) et `regenerateVine` (recalcul tige+motifs à partir des nœuds courants — appelé à la création comme à chaque édition). |

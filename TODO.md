@@ -35,6 +35,9 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 
 - [x] Édition de nœuds : sélection d'une liane, déplacement des points d'ancrage
 - [x] Poignées Bézier éditables par nœud (glisser-déposer, continuité lisse en miroir)
+- [x] Ajouter un nœud (double-clic sur la tige) / en retirer un (double-clic sur son
+      ancre) sur une liane déjà tracée — poignées relissées localement seulement
+      autour du point touché, au moins 2 nœuds toujours conservés
 - [x] Mode « Points » : poser le squelette clic par clic plutôt qu'à main levée
 - [x] Multi-tracés et connexions : démarrer un tracé à proximité d'une liane
       existante en fait une branche, ancrée dessus ; à l'export, les contours de
