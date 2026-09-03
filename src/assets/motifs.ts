@@ -10,16 +10,21 @@ export interface Motif {
   scaleFactor: number;
   /** Taille de base à proposer par défaut sur le curseur "Échelle" de ce motif (voir index.html), en pixels. */
   defaultScale: number;
+  /** Valeur de base à proposer par défaut sur le curseur "Jitter" de ce motif (voir index.html), en pourcentage (MOTIF_JITTER_RANGE). */
+  defaultJitter: number;
   /** Motif interne (`src/assets/*.ts`) : résout la couleur via une règle CSS dédiée. Absente pour un motif chargé depuis un .svg externe, qui utilise `fill` à la place. */
   className?: string;
   /** Couleur de remplissage explicite — motifs chargés depuis un .svg externe (voir `./motifs/*.svg`), qui n'ont pas de règle CSS dédiée à écrire. */
   fill?: string;
 }
 
+/** Valeur par défaut du curseur "Jitter" pour un motif qui n'en précise pas d'autre. */
+const DEFAULT_JITTER = 20;
+
 const BUILTIN_MOTIFS: Motif[] = [
-  { id: "leaf", label: "Feuille", pathD: LEAF_PATH_D, scaleFactor: 1, defaultScale: 16, className: "motif-leaf" },
-  { id: "volute", label: "Volute", pathD: VOLUTE_PATH_D, scaleFactor: 0.9, defaultScale: 14, className: "motif-volute" },
-  { id: "flower", label: "Fleur", pathD: FLOWER_PATH_D, scaleFactor: 1.15, defaultScale: 18, className: "motif-flower" },
+  { id: "leaf", label: "Feuille", pathD: LEAF_PATH_D, scaleFactor: 1, defaultScale: 16, defaultJitter: DEFAULT_JITTER, className: "motif-leaf" },
+  { id: "volute", label: "Volute", pathD: VOLUTE_PATH_D, scaleFactor: 0.9, defaultScale: 14, defaultJitter: DEFAULT_JITTER, className: "motif-volute" },
+  { id: "flower", label: "Fleur", pathD: FLOWER_PATH_D, scaleFactor: 1.15, defaultScale: 18, defaultJitter: DEFAULT_JITTER, className: "motif-flower" },
 ];
 
 /** Rend un identifiant de fichier ("liseron-des-champs") lisible en libellé ("Liseron des champs"). */
@@ -50,17 +55,23 @@ function parseExternalMotifSource(source: string): Pick<Motif, "pathD" | "fill" 
   const pathD = /<path\b[^>]*\bd="([^"]+)"/.exec(source)?.[1];
   if (!pathD) return null;
   const fill = /<path\b[^>]*\bfill="([^"]+)"/.exec(source)?.[1];
-  const scaleFactorRaw = /<svg\b[^>]*\bdata-scale-factor="([^"]+)"/.exec(source)?.[1];
-  const parsedScaleFactor = scaleFactorRaw !== undefined ? Number(scaleFactorRaw) : 1;
+  const scaleFactorRaw = /<svg\b[^>]*\bdata-scale-factor="([^"]+)"/.exec(source)?.[1]?.trim();
+  const parsedScaleFactor = scaleFactorRaw ? Number(scaleFactorRaw) : 1;
   return { pathD, fill, scaleFactor: Number.isFinite(parsedScaleFactor) ? parsedScaleFactor : 1 };
 }
+
+/** Identifiants réservés par le reste du moteur (calque de tige à l'export — voir
+    renderer.ts) qu'un motif, interne ou externe, ne doit jamais pouvoir revendiquer :
+    sans cette garde, un fichier `stem.svg` produirait un second élément
+    `id="layer-stem"` à l'export, un id XML dupliqué. */
+const RESERVED_IDS = new Set(["stem"]);
 
 function loadExternalMotifs(): Motif[] {
   const files = import.meta.glob("./motifs/*.svg", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
   // Le premier motif à revendiquer un identifiant gagne : un .svg externe nommé
   // "leaf.svg" ne peut jamais masquer silencieusement le motif interne "leaf", et deux
   // fichiers externes qui se slugifient vers le même id ne s'écrasent pas l'un l'autre.
-  const seenIds = new Set(BUILTIN_MOTIFS.map((m) => m.id));
+  const seenIds = new Set([...RESERVED_IDS, ...BUILTIN_MOTIFS.map((m) => m.id)]);
   const motifs: Motif[] = [];
   for (const [path, source] of Object.entries(files)) {
     const stem = path.split("/").pop()!.replace(/\.svg$/, "");
@@ -68,7 +79,7 @@ function loadExternalMotifs(): Motif[] {
     if (seenIds.has(id)) continue;
     const parsed = parseExternalMotifSource(source);
     if (!parsed) continue;
-    motifs.push({ id, label: humanizeId(stem), defaultScale: 16, ...parsed });
+    motifs.push({ id, label: humanizeId(stem), defaultScale: 16, defaultJitter: DEFAULT_JITTER, ...parsed });
     seenIds.add(id);
   }
   return motifs;
@@ -79,5 +90,14 @@ export const MOTIFS: Motif[] = [...BUILTIN_MOTIFS, ...loadExternalMotifs()];
 const byId = new Map(MOTIFS.map((m) => [m.id, m]));
 
 export function getMotif(id: string): Motif {
-  return byId.get(id) ?? MOTIFS[0];
+  const motif = byId.get(id);
+  if (motif) return motif;
+  // Le seul cas légitime : un identifiant de motif persisté (localStorage, voir
+  // core/persistence.ts) qui ne correspond plus à aucun motif chargé — un fichier externe
+  // renommé/supprimé depuis la sauvegarde, par exemple. On substitue le premier motif
+  // plutôt que de planter, mais en avertissant : un rendu silencieusement différent de ce
+  // qui a été dessiné est le genre d'écart qu'on veut voir en console, pas découvrir à la
+  // découpe.
+  console.warn(`Motif inconnu "${id}", substitution par "${MOTIFS[0].id}".`);
+  return MOTIFS[0];
 }

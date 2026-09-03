@@ -14,9 +14,10 @@ barre d'outils (`vrille double.svg` → « Vrille double ») et, une fois rédui
 lettres/chiffres/tirets ASCII (accents et espaces retirés), son identifiant interne —
 utilisé tel quel comme `id` du calque à l'export, qui doit rester un nom XML valide
 (`vrille double.svg` → id `vrille-double`, calque `#layer-vrille-double`). Si cet
-identifiant entre en collision avec un motif interne ou un autre fichier externe déjà
-chargé, le premier motif à l'avoir revendiqué garde la main — le second est
-simplement ignoré (aucun message d'erreur, aucun plantage).
+identifiant entre en collision avec un motif interne, un autre fichier externe déjà
+chargé, ou l'identifiant réservé `stem` (le calque de tige à l'export, voir
+`docs/reference/architecture.md`), le premier motif à l'avoir revendiqué garde la
+main — le second est simplement ignoré (aucun message d'erreur, aucun plantage).
 
 Contraintes sur le fichier, dans le même esprit que la géométrie locale des motifs
 internes :

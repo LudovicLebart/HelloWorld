@@ -1,6 +1,6 @@
 import type { EditableNode, Point } from "../core/types";
-import { svgPointFromEvent } from "./pointerCapture";
-import { ANCHOR_TAP_DELAY, TAP_DRAG_THRESHOLD } from "../config";
+import { svgPointFromEvent, exceedsDragThreshold } from "./pointerCapture";
+import { ANCHOR_TAP_DELAY } from "../config";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -200,10 +200,14 @@ export class NodeEditor {
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== e.pointerId || this.nodes !== nodesAtDragStart) return;
         if (!moved) {
-          if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_DRAG_THRESHOLD) return;
+          // Le seuil ne protège qu'un tap (onTap fourni, ancres) : une poignée n'a aucun
+          // geste de tap à distinguer, donc un déplacement (même infime, à la souris/pavé
+          // tactile) doit s'appliquer immédiatement — sans quoi les micro-ajustements de
+          // poignée sous ce seuil sont silencieusement perdus.
+          if (onTap && !exceedsDragThreshold(startClient, ev)) return;
           moved = true;
           this.callbacks?.onDragStart?.();
-          last = svgPointFromEvent(this.svg, ev); // repart du point courant, pas de saut lié au trajet sous le seuil
+          if (onTap) last = svgPointFromEvent(this.svg, ev); // repart du point courant, pas de saut lié au trajet sous le seuil
         }
         const cur = svgPointFromEvent(this.svg, ev);
         applyDelta({ x: cur.x - last.x, y: cur.y - last.y });

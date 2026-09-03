@@ -1,6 +1,14 @@
 import type { Point } from "../core/types";
 import { TAP_DRAG_THRESHOLD } from "../config";
 
+/** Un pointeur a-t-il bougé assez loin de son point de départ pour que le geste soit un
+    drag plutôt qu'un tap ? Seuil partagé par attachStemDrag (ci-dessous) et
+    NodeEditor.attachDrag (nodeEditor.ts), pour distinguer les deux gestes de la même façon
+    sur la tige comme sur les ancres. */
+export function exceedsDragThreshold(start: { x: number; y: number }, current: { x: number; y: number }): boolean {
+  return Math.hypot(current.x - start.x, current.y - start.y) >= TAP_DRAG_THRESHOLD;
+}
+
 export interface StrokeCallbacks {
   onStrokeStart?: (point: Point) => void;
   onStrokeMove?: (points: Point[]) => void;
@@ -95,7 +103,7 @@ export function attachStemDrag(svg: SVGSVGElement, stem: SVGPathElement, callbac
     const onMove = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
       if (!dragging) {
-        if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_DRAG_THRESHOLD) return;
+        if (!exceedsDragThreshold(startClient, ev)) return;
         dragging = true;
         points = [svgPointFromEvent(svg, e)];
         callbacks.onBranchStart?.(points[0]);

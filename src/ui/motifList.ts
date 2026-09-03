@@ -51,7 +51,7 @@ export function buildMotifRow(motif: Motif): HTMLLIElement {
   jitter.min = String(MOTIF_JITTER_RANGE.min);
   jitter.max = String(MOTIF_JITTER_RANGE.max);
   jitter.step = "1";
-  jitter.value = "20";
+  jitter.value = String(motif.defaultJitter);
   jitterLabel.append("Jitter", jitter);
 
   li.append(order, activeLabel, scaleLabel, jitterLabel);
