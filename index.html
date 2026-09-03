@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Vignes &amp; Arabesques</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="toolbar">
+        <h1>Vignes &amp; Arabesques</h1>
+        <div class="controls">
+          <label>
+            Espacement
+            <input id="spacing" type="range" min="8" max="60" value="26" step="1" />
+          </label>
+          <label>
+            Échelle
+            <input id="scale" type="range" min="4" max="40" value="16" step="1" />
+          </label>
+          <label>
+            Jitter
+            <input id="jitter" type="range" min="0" max="100" value="20" step="1" />
+          </label>
+          <label>
+            Épaisseur tige
+            <input id="thickness" type="range" min="1" max="20" value="7" step="1" />
+          </label>
+          <button id="clear">Effacer</button>
+          <button id="export">Exporter SVG</button>
+        </div>
+      </header>
+      <main id="canvas-wrap">
+        <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
