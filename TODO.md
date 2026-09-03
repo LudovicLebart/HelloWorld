@@ -46,9 +46,11 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 - [ ] Masques d'écrêtage : définir une zone de travail (ex. la forme d'un pickguard)
       pour que les lianes ne dépassent jamais de la zone délimitée
 - [ ] Nœud « coin » (poignées indépendantes, non miroir) en plus du nœud lisse actuel
-- [ ] Annuler/refaire (undo/redo) — aucune action n'est réversible actuellement
-- [ ] Sauvegarde/reprise (localStorage a minima) — tout le canevas est perdu au
-      rechargement de la page
+- [x] Annuler/refaire (Ctrl+Z / Ctrl+Y, boutons dans la barre d'outils) : instantané
+      complet avant chaque action structurelle (création, déplacement de nœud,
+      effacement) — les réglages de curseurs ne créent pas d'étape d'annulation
+- [x] Sauvegarde/reprise automatique (localStorage) : le canevas est repris tel quel
+      au rechargement de la page ; l'historique d'annulation, lui, ne l'est pas
 
 ## Étape 4 — Export & production (le livrable)
 

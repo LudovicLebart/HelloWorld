@@ -25,12 +25,21 @@ interface NodeElements {
  * ferait perdre la capture de pointeur en cours, puisque le navigateur la
  * relâche implicitement dès que l'élément capturé quitte le DOM.
  */
+export interface NodeEditorCallbacks {
+  /** Une fois, avant toute mutation : point d'accroche pour capturer un instantané "avant" (undo). */
+  onDragStart?: () => void;
+  /** À chaque frame du glisser-déposer : rendu en direct. */
+  onChange: () => void;
+  /** Une fois, au relâchement : point d'accroche pour persister le résultat final. */
+  onDragEnd?: () => void;
+}
+
 export class NodeEditor {
   private svg: SVGSVGElement;
   private overlay: SVGGElement;
   private nodes: EditableNode[] = [];
   private elements: NodeElements[] = [];
-  private onChange: ((nodes: EditableNode[]) => void) | null = null;
+  private callbacks: NodeEditorCallbacks | null = null;
 
   constructor(svg: SVGSVGElement) {
     this.svg = svg;
@@ -39,16 +48,16 @@ export class NodeEditor {
     this.svg.appendChild(this.overlay);
   }
 
-  show(nodes: EditableNode[], onChange: (nodes: EditableNode[]) => void): void {
+  show(nodes: EditableNode[], callbacks: NodeEditorCallbacks): void {
     this.nodes = nodes;
-    this.onChange = onChange;
+    this.callbacks = callbacks;
     this.rebuild();
   }
 
   hide(): void {
     this.nodes = [];
     this.elements = [];
-    this.onChange = null;
+    this.callbacks = null;
     this.overlay.replaceChildren();
   }
 
@@ -140,20 +149,26 @@ export class NodeEditor {
       e.stopPropagation();
       el.setPointerCapture(e.pointerId);
       let last = svgPointFromEvent(this.svg, e);
+      let moved = false;
 
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== e.pointerId) return;
+        if (!moved) {
+          moved = true;
+          this.callbacks?.onDragStart?.();
+        }
         const cur = svgPointFromEvent(this.svg, ev);
         applyDelta({ x: cur.x - last.x, y: cur.y - last.y });
         last = cur;
         this.syncPositions();
-        this.onChange?.(this.nodes);
+        this.callbacks?.onChange();
       };
       const onUp = (ev: PointerEvent) => {
         if (ev.pointerId !== e.pointerId) return;
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
         el.removeEventListener("pointercancel", onUp);
+        if (moved) this.callbacks?.onDragEnd?.();
       };
 
       el.addEventListener("pointermove", onMove);

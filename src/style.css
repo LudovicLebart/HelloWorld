@@ -77,6 +77,32 @@ button#clear {
   color: var(--accent);
 }
 
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.undo-redo {
+  display: flex;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.undo-redo button {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.4rem 0.7rem;
+}
+
+.undo-redo button:disabled {
+  color: #b7ab97;
+}
+
 .mode-toggle {
   display: flex;
   border: 1px solid var(--accent);

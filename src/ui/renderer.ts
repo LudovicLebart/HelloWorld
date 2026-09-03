@@ -38,7 +38,6 @@ export class Renderer {
   private vinesLayer: SVGGElement;
   private liveStroke: SVGPolylineElement;
   private vines = new Map<string, VineGroup>();
-  private nextId = 1;
 
   constructor(svg: SVGSVGElement) {
     this.svg = svg;
@@ -56,12 +55,13 @@ export class Renderer {
   }
 
   /**
-   * Crée une nouvelle liane vide et retourne son identifiant. `callbacks`
-   * gère les gestes sur sa tige : un tap la sélectionne pour édition, un
-   * drag en tire une branche (voir `attachStemDrag`).
+   * Crée une nouvelle liane vide sous l'identifiant fourni par l'appelant
+   * (qui doit rester stable pour un instantané restauré — undo/redo,
+   * rechargement depuis le stockage local). `callbacks` gère les gestes sur
+   * sa tige : un tap la sélectionne pour édition, un drag en tire une
+   * branche (voir `attachStemDrag`).
    */
-  createVine(callbacks: StemDragCallbacks): string {
-    const id = `vine-${this.nextId++}`;
+  createVine(id: string, callbacks: StemDragCallbacks): void {
     const group = document.createElementNS(SVG_NS, "g");
     group.setAttribute("class", "vine");
     group.dataset.vineId = id;
@@ -84,7 +84,6 @@ export class Renderer {
     this.vinesLayer.appendChild(group);
 
     this.vines.set(id, { group, stem, leavesLayer });
-    return id;
   }
 
   /** Remplace le contenu (tige + feuilles) d'une liane existante — appelé à chaque édition de ses nœuds. */

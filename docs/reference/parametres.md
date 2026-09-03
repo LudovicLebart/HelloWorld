@@ -10,6 +10,7 @@
 | Échelle | `#scale` | 4–40 px | Taille de base d'une instance de motif, avant le facteur propre au motif (`scaleFactor`) et le rétrécissement vers les extrémités de la tige. |
 | Jitter | `#jitter` | 0–100 | Intensité de la variation aléatoire d'échelle, d'angle et de décalage d'attache de chaque instance — évite l'effet « tampon ». |
 | Épaisseur tige | `#thickness` | 1–20 px | Largeur maximale de la tige, au centre de la liane (elle s'affine vers les deux extrémités quel que soit ce réglage). |
+| Annuler / Rétablir | `#undo` / `#redo` | — | Ctrl+Z / Ctrl+Y (ou Cmd sur Mac). Annule/rétablit la création d'une liane, un déplacement de nœud ou un effacement — pas les réglages de curseurs ni de motifs, trop fréquents pour être pertinents en historique. |
 
 Tous ces contrôles, motifs compris, s'appliquent à la liane **actuellement
 sélectionnée** en plus de définir les réglages du prochain tracé — voir

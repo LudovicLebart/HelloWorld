@@ -39,6 +39,10 @@ rouge pour déplacer le point ; faites glisser un carré bleu pour courber local
 liane sans changer sa position. Voir
 [Éditer une liane existante](../how-to/editer-une-liane.md) pour aller plus loin.
 
+Une erreur de geste ? Ctrl+Z (Cmd+Z sur Mac) ou le bouton ↶ annule la dernière
+action ; Ctrl+Y ou ↷ la rétablit. Le canevas est aussi sauvegardé automatiquement
+dans le navigateur — fermer l'onglet ou recharger la page ne perd rien.
+
 ## 6. Exporter
 
 Cliquez sur **Exporter SVG**. Le fichier téléchargé contient des chemins fermés
