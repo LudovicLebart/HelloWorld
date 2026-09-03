@@ -27,9 +27,12 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 - [ ] Charger de vrais fichiers `.svg` externes comme motifs, plutôt que des
       silhouettes générées en interne (`src/assets/*.ts`) — nécessaire pour que
       quelqu'un d'autre que le développeur puisse ajouter un motif sans toucher au code
-- [ ] Séquence personnalisable par l'utilisateur (actuellement l'ordre feuille →
-      volute → fleur est fixe, seule l'activation de chaque motif est réglable)
-- [ ] Réglages (échelle, jitter) indépendants par motif plutôt que globaux à la séquence
+- [x] Séquence personnalisable par l'utilisateur : flèches ↑/↓ par motif dans
+      `#motif-list`, l'ordre du DOM fait foi (pas de tableau séparé à synchroniser) —
+      voir [Séquencer les motifs](docs/how-to/sequencer-des-motifs.md)
+- [x] Réglages (échelle, jitter) indépendants par motif plutôt que globaux à la
+      séquence — `MotifSequenceEntry` dans `core/brush.ts`, plus de curseurs Échelle/
+      Jitter globaux
 
 ## Étape 3 — Interaction & édition non-destructive (l'UX)
 

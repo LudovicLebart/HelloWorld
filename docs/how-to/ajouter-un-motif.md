@@ -31,9 +31,12 @@ les autres à `scale` égal — ajustez-le à l'œil.
 ## 3. Styler et exposer dans l'interface
 
 - Dans `src/style.css`, ajoutez une règle `.motif-vrille { fill: ...; }`.
-- Dans `index.html`, ajoutez une case à cocher dans le groupe `.motif-toggles` :
-  `<input type="checkbox" id="motif-vrille" checked />`.
-- Dans `src/main.ts`, ajoutez l'entrée correspondante à l'objet `motifCheckboxes`.
+- Dans `index.html`, ajoutez une rangée `<li class="motif-row" data-motif="vrille">` dans
+  `#motif-list`, sur le même modèle que les trois existantes (flèches ↑/↓, case active,
+  curseurs d'échelle et de jitter propres à ce motif) — voir
+  [Séquencer les motifs](sequencer-des-motifs.md). Rien à toucher dans `src/main.ts` :
+  `currentSequence()` lit dynamiquement les rangées de `#motif-list`, sans liste
+  d'identifiants en dur.
 
 ## Ce qu'il ne faut pas faire
 

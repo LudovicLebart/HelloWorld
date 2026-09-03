@@ -1,6 +1,6 @@
 import "./style.css";
 import type { CurveSample, EditableNode, Point } from "./core/types";
-import type { BrushPlacement } from "./core/brush";
+import type { BrushPlacement, MotifSequenceEntry } from "./core/brush";
 import {
   nodesFromStroke,
   nodesFromClicks,
@@ -28,8 +28,6 @@ const nodeEditor = new NodeEditor(svg);
 const history = new SnapshotHistory(UNDO_LIMIT);
 
 const spacingInput = document.querySelector<HTMLInputElement>("#spacing")!;
-const scaleInput = document.querySelector<HTMLInputElement>("#scale")!;
-const jitterInput = document.querySelector<HTMLInputElement>("#jitter")!;
 const thicknessInput = document.querySelector<HTMLInputElement>("#thickness")!;
 const densityInput = document.querySelector<HTMLInputElement>("#density")!;
 const clearButton = document.querySelector<HTMLButtonElement>("#clear")!;
@@ -42,11 +40,12 @@ const modeMaskButton = document.querySelector<HTMLButtonElement>("#mode-mask")!;
 const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")!;
 const finishMaskButton = document.querySelector<HTMLButtonElement>("#finish-mask")!;
 const clearMaskButton = document.querySelector<HTMLButtonElement>("#clear-mask")!;
-const motifCheckboxes = {
-  leaf: document.querySelector<HTMLInputElement>("#motif-leaf")!,
-  volute: document.querySelector<HTMLInputElement>("#motif-volute")!,
-  flower: document.querySelector<HTMLInputElement>("#motif-flower")!,
-};
+const motifListEl = document.querySelector<HTMLOListElement>("#motif-list")!;
+
+/** Une rangée de la séquence de motifs — voir index.html (#motif-list). */
+function motifRows(): HTMLLIElement[] {
+  return [...motifListEl.querySelectorAll<HTMLLIElement>(".motif-row")];
+}
 
 type Mode = "freehand" | "points" | "mask";
 
@@ -84,11 +83,16 @@ function currentEpsilon(): number {
   return max - (density / 100) * (max - min);
 }
 
-function currentSequence(): string[] {
-  const active = (Object.keys(motifCheckboxes) as Array<keyof typeof motifCheckboxes>).filter(
-    (id) => motifCheckboxes[id].checked,
-  );
-  return active.length > 0 ? active : ["leaf"];
+/** Lit la séquence de motifs dans l'ordre actuel du DOM (#motif-list) — un clic sur ↑/↓ réordonne les <li>, l'ordre du DOM fait foi. Chaque motif actif garde sa propre échelle/jitter. */
+function currentSequence(): MotifSequenceEntry[] {
+  const rows = motifRows();
+  const active = rows.filter((li) => li.querySelector<HTMLInputElement>(".motif-active")!.checked);
+  const chosen = active.length > 0 ? active : rows.slice(0, 1);
+  return chosen.map((li) => ({
+    motifId: li.dataset.motif!,
+    scale: Number(li.querySelector<HTMLInputElement>(".motif-scale")!.value),
+    jitter: Number(li.querySelector<HTMLInputElement>(".motif-jitter")!.value) / 100,
+  }));
 }
 
 /** Les paramètres tels que les curseurs les affichent *maintenant* — pour une liane en cours de création ou d'édition live. */
@@ -97,8 +101,6 @@ function liveParams(parentId: string | undefined): VineParams {
     stemWidth: Number(thicknessInput.value),
     brush: {
       spacing: Number(spacingInput.value),
-      baseScale: Number(scaleInput.value),
-      jitter: Number(jitterInput.value) / 100,
       sequence: currentSequence(),
     },
     taperStart: !parentId,
@@ -334,16 +336,49 @@ function refreshSelectedVine(): void {
   regenerateAndRender(selectedId, liveParams(vine.parentId));
 }
 
-for (const input of [spacingInput, scaleInput, jitterInput, thicknessInput]) {
+for (const input of [spacingInput, thicknessInput]) {
   input.addEventListener("input", refreshSelectedVine);
   input.addEventListener("change", () => saveSnapshot());
 }
-for (const checkbox of Object.values(motifCheckboxes)) {
-  checkbox.addEventListener("change", () => {
+
+/** Active/désactive les flèches en bout de liste (rien à monter au-dessus du premier, rien à descendre sous le dernier). */
+function updateMotifOrderButtons(): void {
+  const rows = motifRows();
+  rows.forEach((li, i) => {
+    li.querySelector<HTMLButtonElement>(".motif-up")!.disabled = i === 0;
+    li.querySelector<HTMLButtonElement>(".motif-down")!.disabled = i === rows.length - 1;
+  });
+}
+
+for (const li of motifRows()) {
+  li.querySelector<HTMLInputElement>(".motif-active")!.addEventListener("change", () => {
+    refreshSelectedVine();
+    saveSnapshot();
+  });
+  for (const slider of li.querySelectorAll<HTMLInputElement>(".motif-scale, .motif-jitter")) {
+    slider.addEventListener("input", refreshSelectedVine);
+    slider.addEventListener("change", () => saveSnapshot());
+  }
+  // Réordonner ne crée pas d'étape d'annulation, comme les autres réglages de rendu — seul
+  // l'ordre des <li> dans le DOM fait foi (voir currentSequence()), pas de tableau à synchroniser.
+  li.querySelector<HTMLButtonElement>(".motif-up")!.addEventListener("click", () => {
+    const prev = li.previousElementSibling;
+    if (!prev) return;
+    motifListEl.insertBefore(li, prev);
+    updateMotifOrderButtons();
+    refreshSelectedVine();
+    saveSnapshot();
+  });
+  li.querySelector<HTMLButtonElement>(".motif-down")!.addEventListener("click", () => {
+    const next = li.nextElementSibling;
+    if (!next) return;
+    motifListEl.insertBefore(next, li);
+    updateMotifOrderButtons();
     refreshSelectedVine();
     saveSnapshot();
   });
 }
+updateMotifOrderButtons();
 
 clearButton.addEventListener("click", () => {
   if (vines.size === 0) return;

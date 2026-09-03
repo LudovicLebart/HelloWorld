@@ -19,11 +19,37 @@
           <button id="finish-points" hidden>Terminer le tracé</button>
           <button id="finish-mask" hidden>Terminer le masque</button>
           <button id="clear-mask">Effacer le masque</button>
-          <fieldset class="motif-toggles">
-            <legend>Motifs</legend>
-            <label class="checkbox"><input type="checkbox" id="motif-leaf" checked /> Feuille</label>
-            <label class="checkbox"><input type="checkbox" id="motif-volute" checked /> Volute</label>
-            <label class="checkbox"><input type="checkbox" id="motif-flower" checked /> Fleur</label>
+          <fieldset class="motif-sequence">
+            <legend>Motifs (ordre, échelle, jitter)</legend>
+            <ol id="motif-list">
+              <li class="motif-row" data-motif="leaf">
+                <div class="motif-order">
+                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
+                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
+                </div>
+                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Feuille</label>
+                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="16" step="1" /></label>
+                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
+              </li>
+              <li class="motif-row" data-motif="volute">
+                <div class="motif-order">
+                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
+                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
+                </div>
+                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Volute</label>
+                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="14" step="1" /></label>
+                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
+              </li>
+              <li class="motif-row" data-motif="flower">
+                <div class="motif-order">
+                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
+                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
+                </div>
+                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Fleur</label>
+                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="18" step="1" /></label>
+                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
+              </li>
+            </ol>
           </fieldset>
           <label>
             Densité des points
@@ -32,14 +58,6 @@
           <label>
             Espacement
             <input id="spacing" type="range" min="8" max="60" value="26" step="1" />
-          </label>
-          <label>
-            Échelle
-            <input id="scale" type="range" min="4" max="40" value="16" step="1" />
-          </label>
-          <label>
-            Jitter
-            <input id="jitter" type="range" min="0" max="100" value="20" step="1" />
           </label>
           <label>
             Épaisseur tige
