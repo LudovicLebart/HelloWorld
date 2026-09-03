@@ -1,6 +1,6 @@
 import type { Point } from "../core/types";
 import type { BrushPlacement } from "../core/brush";
-import { LEAF_PATH_D } from "../assets/leaf";
+import { getMotif } from "../assets/motifs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -76,14 +76,13 @@ export class Renderer {
 
     vine.leavesLayer.replaceChildren();
     for (const leaf of leaves) {
+      const motif = getMotif(leaf.motifId);
       const path = document.createElementNS(SVG_NS, "path");
-      path.setAttribute("class", "leaf-instance");
-      path.setAttribute("d", LEAF_PATH_D);
+      path.setAttribute("class", `motif-instance ${motif.className}`);
+      path.setAttribute("d", motif.pathD);
       const deg = (leaf.angle * 180) / Math.PI;
-      path.setAttribute(
-        "transform",
-        `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${leaf.scale})`,
-      );
+      const scale = leaf.scale * motif.scaleFactor;
+      path.setAttribute("transform", `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${scale})`);
       vine.leavesLayer.appendChild(path);
     }
   }

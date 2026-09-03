@@ -120,9 +120,44 @@ button#clear {
   stroke: none;
 }
 
-.leaf-instance {
-  fill: #4c7a3f;
+.motif-instance {
   stroke: none;
+}
+
+.motif-leaf {
+  fill: #4c7a3f;
+}
+
+.motif-volute {
+  fill: #8a6a2f;
+}
+
+.motif-flower {
+  fill: #b5456b;
+}
+
+.motif-toggles {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  margin: 0;
+}
+
+.motif-toggles legend {
+  font-size: 0.65rem;
+  color: #6b5f4c;
+  padding: 0 0.3rem;
+}
+
+.controls label.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .live-stroke {

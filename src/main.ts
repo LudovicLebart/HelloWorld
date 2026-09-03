@@ -19,6 +19,11 @@ const exportButton = document.querySelector<HTMLButtonElement>("#export")!;
 const modeFreehandButton = document.querySelector<HTMLButtonElement>("#mode-freehand")!;
 const modePointsButton = document.querySelector<HTMLButtonElement>("#mode-points")!;
 const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")!;
+const motifCheckboxes = {
+  leaf: document.querySelector<HTMLInputElement>("#motif-leaf")!,
+  volute: document.querySelector<HTMLInputElement>("#motif-volute")!,
+  flower: document.querySelector<HTMLInputElement>("#motif-flower")!,
+};
 
 type Mode = "freehand" | "points";
 
@@ -39,6 +44,13 @@ function currentEpsilon(): number {
   return MAX_EPSILON - (density / 100) * (MAX_EPSILON - MIN_EPSILON);
 }
 
+function currentSequence(): string[] {
+  const active = (Object.keys(motifCheckboxes) as Array<keyof typeof motifCheckboxes>).filter(
+    (id) => motifCheckboxes[id].checked,
+  );
+  return active.length > 0 ? active : ["leaf"];
+}
+
 function currentParams(): VineParams {
   return {
     stemWidth: Number(thicknessInput.value),
@@ -46,6 +58,7 @@ function currentParams(): VineParams {
       spacing: Number(spacingInput.value),
       baseScale: Number(scaleInput.value),
       jitter: Number(jitterInput.value) / 100,
+      sequence: currentSequence(),
     },
   };
 }
@@ -127,15 +140,20 @@ finishButton.addEventListener("click", () => {
   if (pendingClickPoints.length >= 2) finishPointsVine();
 });
 
-// Ajuster un curseur met à jour la liane sélectionnée en direct (édition non-destructive).
+// Ajuster un curseur ou une case à cocher met à jour la liane sélectionnée en direct (édition non-destructive).
+function refreshSelectedVine(): void {
+  if (!selectedId) return;
+  const vine = vines.get(selectedId);
+  if (!vine) return;
+  const { stemPathD, leaves } = regenerateVine(vine.nodes, currentParams());
+  renderer.updateVine(selectedId, stemPathD, leaves);
+}
+
 for (const input of [spacingInput, scaleInput, jitterInput, thicknessInput]) {
-  input.addEventListener("input", () => {
-    if (!selectedId) return;
-    const vine = vines.get(selectedId);
-    if (!vine) return;
-    const { stemPathD, leaves } = regenerateVine(vine.nodes, currentParams());
-    renderer.updateVine(selectedId, stemPathD, leaves);
-  });
+  input.addEventListener("input", refreshSelectedVine);
+}
+for (const checkbox of Object.values(motifCheckboxes)) {
+  checkbox.addEventListener("change", refreshSelectedVine);
 }
 
 clearButton.addEventListener("click", () => {

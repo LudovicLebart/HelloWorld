@@ -6,6 +6,8 @@ export interface BrushPlacement {
   /** Angle absolu (radians) à appliquer au motif. */
   angle: number;
   scale: number;
+  /** Identifiant du motif à dessiner à cet emplacement (voir src/assets/motifs.ts). */
+  motifId: string;
 }
 
 export interface BrushOptions {
@@ -17,6 +19,8 @@ export interface BrushOptions {
   jitter: number;
   /** Angle de base entre la tige et un motif, en degrés. */
   baseAngleDeg?: number;
+  /** Séquence de motifs à faire alterner le long de la tige (répétée en boucle). */
+  sequence: string[];
 }
 
 function angleOf(v: Point): number {
@@ -43,9 +47,12 @@ export function placeBrush(curve: CurveSample[], opts: BrushOptions): BrushPlace
   const baseAngleRad = ((opts.baseAngleDeg ?? 55) * Math.PI) / 180;
   const total = curve[curve.length - 1].arcLength;
 
+  const sequence = opts.sequence.length > 0 ? opts.sequence : ["leaf"];
+
   const placements: BrushPlacement[] = [];
   let side = 1;
   let searchIndex = 0;
+  let seqIndex = 0;
 
   for (let d = spacing / 2; d < total; d += spacing) {
     const [sample, idx] = sampleAtArcLength(curve, d, searchIndex);
@@ -67,8 +74,9 @@ export function placeBrush(curve: CurveSample[], opts: BrushOptions): BrushPlace
       y: sample.point.y + sample.normal.y * attachOffset,
     };
 
-    placements.push({ position, angle, scale });
+    placements.push({ position, angle, scale, motifId: sequence[seqIndex % sequence.length] });
     side = -side;
+    seqIndex++;
   }
 
   return placements;
