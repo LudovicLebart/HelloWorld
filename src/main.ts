@@ -1,15 +1,26 @@
 import "./style.css";
 import type { CurveSample, EditableNode, Point } from "./core/types";
 import type { BrushPlacement } from "./core/brush";
-import { nodesFromStroke, nodesFromClicks, regenerateVine, type VineParams } from "./core/vine";
+import {
+  nodesFromStroke,
+  nodesFromClicks,
+  regenerateVine,
+  serializeVines,
+  deserializeVines,
+  type VineParams,
+} from "./core/vine";
 import { unionStemPolygons } from "./core/junction";
+import { SnapshotHistory } from "./core/history";
+import { saveToStorage as persistSnapshot, loadFromStorage as readPersistedSnapshot } from "./core/persistence";
 import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
 import { Renderer, type ExportCluster } from "./ui/renderer";
 import { NodeEditor } from "./ui/nodeEditor";
+import { STORAGE_KEY, UNDO_LIMIT, BRANCH_SNAP_RADIUS, DENSITY_EPSILON_RANGE } from "./config";
 
 const svg = document.querySelector<SVGSVGElement>("#canvas")!;
 const renderer = new Renderer(svg);
 const nodeEditor = new NodeEditor(svg);
+const history = new SnapshotHistory(UNDO_LIMIT);
 
 const spacingInput = document.querySelector<HTMLInputElement>("#spacing")!;
 const scaleInput = document.querySelector<HTMLInputElement>("#scale")!;
@@ -51,19 +62,14 @@ let pendingSnapPoint: Point | null = null;
 let detachInteraction: () => void = () => {};
 let nextVineId = 1;
 
-const MIN_EPSILON = 0.5; // px : beaucoup de points, suit la main de très près
-const MAX_EPSILON = 12; // px : très simplifié, peu de points
-const BRANCH_SNAP_RADIUS = 16; // px : distance sous laquelle un nouveau tracé s'accroche à une liane existante
-const STORAGE_KEY = "vignes-arabesques:canvas-v1";
-const UNDO_LIMIT = 50;
-
 function newVineId(): string {
   return `vine-${nextVineId++}`;
 }
 
 function currentEpsilon(): number {
   const density = Number(densityInput.value); // 0 (épars) .. 100 (dense)
-  return MAX_EPSILON - (density / 100) * (MAX_EPSILON - MIN_EPSILON);
+  const { min, max } = DENSITY_EPSILON_RANGE;
+  return max - (density / 100) * (max - min);
 }
 
 function currentSequence(): string[] {
@@ -73,7 +79,8 @@ function currentSequence(): string[] {
   return active.length > 0 ? active : ["leaf"];
 }
 
-function currentParams(): VineParams {
+/** Les paramètres tels que les curseurs les affichent *maintenant* — pour une liane en cours de création ou d'édition live. */
+function liveParams(parentId: string | undefined): VineParams {
   return {
     stemWidth: Number(thicknessInput.value),
     brush: {
@@ -82,14 +89,27 @@ function currentParams(): VineParams {
       jitter: Number(jitterInput.value) / 100,
       sequence: currentSequence(),
     },
+    taperStart: !parentId,
+    taperEnd: true,
   };
 }
 
-/** Recalcule tige+feuilles d'une liane à partir de ses nœuds courants, met en cache le résultat (params/curve/polygone/feuilles, réutilisés tels quels à l'export et à la persistance) et rafraîchit son rendu. */
-function regenerateAndRender(id: string): void {
+/**
+ * Recalcule tige+feuilles d'une liane à partir de ses nœuds courants et des
+ * `params` fournis explicitement, met en cache le résultat (curve/polygone/
+ * feuilles/params, réutilisés tels quels à l'export et à la persistance) et
+ * rafraîchit son rendu.
+ *
+ * `params` n'est jamais relu implicitement depuis les curseurs ici : c'est
+ * à l'appelant de fournir soit `liveParams(...)` (création, édition en
+ * direct — reflète les curseurs actuels), soit des params historiques
+ * restaurés (undo/redo, reprise depuis le stockage local) — sans quoi
+ * restaurer un instantané se ferait écraser aussitôt par les valeurs
+ * actuelles des curseurs.
+ */
+function regenerateAndRender(id: string, params: VineParams): void {
   const vine = vines.get(id);
   if (!vine) return;
-  const params: VineParams = { ...currentParams(), taperStart: !vine.parentId, taperEnd: true };
   const { curve, stemPolygon, stemPathD, leaves } = regenerateVine(vine.nodes, params);
   vine.params = params;
   vine.curve = curve;
@@ -123,8 +143,8 @@ function selectVine(id: string): void {
   if (!vine) return;
   nodeEditor.show(vine.nodes, {
     onDragStart: () => pushUndo(),
-    onChange: () => regenerateAndRender(id),
-    onDragEnd: () => saveToStorage(),
+    onChange: () => regenerateAndRender(id, liveParams(vine.parentId)),
+    onDragEnd: () => saveSnapshot(),
   });
 }
 
@@ -145,10 +165,11 @@ function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
   pushUndo();
   const id = newVineId();
   wireVine(id);
-  vines.set(id, { nodes, parentId, params: currentParams(), curve: [], stemPolygon: [], leaves: [] });
-  regenerateAndRender(id);
+  const params = liveParams(parentId);
+  vines.set(id, { nodes, parentId, params, curve: [], stemPolygon: [], leaves: [] });
+  regenerateAndRender(id, params);
   selectVine(id);
-  saveToStorage();
+  saveSnapshot();
 }
 
 function finishPointsVine(): void {
@@ -222,20 +243,26 @@ finishButton.addEventListener("click", () => {
   if (pendingClickPoints.length >= 2) finishPointsVine();
 });
 
-// Ajuster un curseur ou une case à cocher met à jour la liane sélectionnée en direct (édition non-destructive).
-// Pas d'étape d'annulation dédiée pour ces réglages (trop fréquents pour être pertinents en undo),
-// mais le résultat est bien persisté.
+// Ajuster un curseur ou une case à cocher met à jour la liane sélectionnée en direct
+// (édition non-destructive). Pas d'étape d'annulation dédiée pour ces réglages (trop
+// fréquents pour être pertinents en undo) ; la sauvegarde, elle, est différée jusqu'au
+// relâchement ("change") pour un curseur — pas à chaque frame de glissement ("input").
 function refreshSelectedVine(): void {
   if (!selectedId) return;
-  regenerateAndRender(selectedId);
-  saveToStorage();
+  const vine = vines.get(selectedId);
+  if (!vine) return;
+  regenerateAndRender(selectedId, liveParams(vine.parentId));
 }
 
 for (const input of [spacingInput, scaleInput, jitterInput, thicknessInput]) {
   input.addEventListener("input", refreshSelectedVine);
+  input.addEventListener("change", () => saveSnapshot());
 }
 for (const checkbox of Object.values(motifCheckboxes)) {
-  checkbox.addEventListener("change", refreshSelectedVine);
+  checkbox.addEventListener("change", () => {
+    refreshSelectedVine();
+    saveSnapshot();
+  });
 }
 
 clearButton.addEventListener("click", () => {
@@ -245,7 +272,7 @@ clearButton.addEventListener("click", () => {
   vines.clear();
   deselect();
   pendingClickPoints = [];
-  saveToStorage();
+  saveSnapshot();
 });
 
 /** Remonte à la liane racine (celle sans parent) d'une chaîne de branches, pour regrouper toute la grappe à l'export. */
@@ -288,92 +315,53 @@ exportButton.addEventListener("click", () => {
 });
 
 // --- Annuler/rétablir + sauvegarde locale ------------------------------
-//
-// Chaque liane n'a besoin de conserver que ses nœuds, sa liane parente
-// éventuelle et les paramètres utilisés pour la générer : tout le reste
-// (curve, polygone de tige, feuilles) est dérivé et se recalcule à la
-// restauration. Un instantané est donc juste la liste sérialisée de ces
-// triplets — assez petit pour être dupliqué tel quel (chaîne JSON) à
-// chaque étape d'annulation, sans jamais risquer d'alias entre l'état
-// affiché et une entrée de l'historique.
 
-interface SerializedVine {
-  id: string;
-  nodes: EditableNode[];
-  parentId?: string;
-  params: VineParams;
-}
-
-let undoStack: string[] = [];
-let redoStack: string[] = [];
-
-function snapshot(): string {
-  const list: SerializedVine[] = [...vines].map(([id, v]) => ({
-    id,
-    nodes: v.nodes,
-    parentId: v.parentId,
-    params: v.params,
-  }));
-  return JSON.stringify(list);
-}
-
-function loadVines(list: SerializedVine[]): void {
+/** Reconstruit tout le canevas à partir d'un instantané validé — nœuds ET params historiques, jamais les curseurs actuels (voir regenerateAndRender). */
+function loadVines(list: ReturnType<typeof deserializeVines>): void {
+  if (!list) return;
   renderer.clear();
   vines.clear();
   deselect();
   for (const v of list) {
     wireVine(v.id);
     vines.set(v.id, { nodes: v.nodes, parentId: v.parentId, params: v.params, curve: [], stemPolygon: [], leaves: [] });
-    regenerateAndRender(v.id);
+    regenerateAndRender(v.id, v.params);
   }
 }
 
+function snapshot(): string {
+  return serializeVines(vines);
+}
+
 function updateUndoRedoButtons(): void {
-  undoButton.disabled = undoStack.length === 0;
-  redoButton.disabled = redoStack.length === 0;
+  undoButton.disabled = !history.canUndo;
+  redoButton.disabled = !history.canRedo;
 }
 
 /** À appeler juste avant toute mutation structurelle (nouvelle liane, déplacement de nœud, effacement). */
 function pushUndo(): void {
-  undoStack.push(snapshot());
-  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
-  redoStack = [];
+  history.push(snapshot());
   updateUndoRedoButtons();
 }
 
 function undo(): void {
-  if (undoStack.length === 0) return;
-  redoStack.push(snapshot());
-  const prev = undoStack.pop()!;
-  loadVines(JSON.parse(prev));
-  saveToStorage();
+  const prev = history.undo(snapshot());
+  if (!prev) return;
+  loadVines(deserializeVines(prev));
+  saveSnapshot();
   updateUndoRedoButtons();
 }
 
 function redo(): void {
-  if (redoStack.length === 0) return;
-  undoStack.push(snapshot());
-  const next = redoStack.pop()!;
-  loadVines(JSON.parse(next));
-  saveToStorage();
+  const next = history.redo(snapshot());
+  if (!next) return;
+  loadVines(deserializeVines(next));
+  saveSnapshot();
   updateUndoRedoButtons();
 }
 
-function saveToStorage(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, snapshot());
-  } catch {
-    // Stockage indisponible (navigation privée, quota dépassé...) : tant pis, pas fatal.
-  }
-}
-
-function loadFromStorage(): SerializedVine[] | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+function saveSnapshot(): void {
+  persistSnapshot(STORAGE_KEY, snapshot());
 }
 
 undoButton.addEventListener("click", undo);
@@ -389,11 +377,20 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-const restored = loadFromStorage();
+// Reprise depuis le stockage local — jamais elle-même une action annulable. Une donnée
+// corrompue ou de forme incompatible est déjà écartée par deserializeVines (→ null) ;
+// on protège aussi contre un échec plus tardif dans la régénération (nœuds valides en
+// forme mais géométriquement dégénérés, etc.) pour ne jamais empêcher setMode() de
+// s'exécuter — sans quoi l'app démarrerait avec le tracé non câblé, inutilisable.
+const restored = deserializeVines(readPersistedSnapshot(STORAGE_KEY) ?? "");
 if (restored && restored.length > 0) {
-  loadVines(restored);
-  // La reprise depuis le stockage local n'est pas elle-même une action annulable.
-  nextVineId = restored.reduce((max, v) => Math.max(max, Number(v.id.split("-")[1]) || 0), 0) + 1;
+  try {
+    loadVines(restored);
+    nextVineId = restored.reduce((max, v) => Math.max(max, Number(v.id.split("-")[1]) || 0), 0) + 1;
+  } catch {
+    renderer.clear();
+    vines.clear();
+  }
 }
 updateUndoRedoButtons();
 setMode("freehand");

@@ -1,4 +1,5 @@
 import type { Point } from "../core/types";
+import { TAP_DRAG_THRESHOLD } from "../config";
 
 export interface StrokeCallbacks {
   onStrokeStart?: (point: Point) => void;
@@ -62,8 +63,6 @@ export function attachPointerCapture(svg: SVGSVGElement, callbacks: StrokeCallba
   };
 }
 
-const TAP_THRESHOLD = 5; // px écran : en-deçà, un pointerdown+up sur la tige est un tap (sélection), pas un tracé de branche
-
 export interface StemDragCallbacks {
   /** Pointerdown suivi d'un pointerup sans déplacement significatif : sélectionner la liane. */
   onTap: () => void;
@@ -94,7 +93,7 @@ export function attachStemDrag(svg: SVGSVGElement, stem: SVGPathElement, callbac
     const onMove = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
       if (!dragging) {
-        if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_THRESHOLD) return;
+        if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_DRAG_THRESHOLD) return;
         dragging = true;
         points = [svgPointFromEvent(svg, e)];
         callbacks.onBranchStart?.(points[0]);

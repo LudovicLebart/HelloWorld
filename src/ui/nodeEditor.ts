@@ -148,11 +148,16 @@ export class NodeEditor {
     el.addEventListener("pointerdown", (e: PointerEvent) => {
       e.stopPropagation();
       el.setPointerCapture(e.pointerId);
+      // Référence figée au tableau de nœuds actif au démarrage du drag : si hide()/show()
+      // en installe un autre entre-temps (sélection changée, undo, effacement...), la
+      // comparaison ci-dessous permet d'abandonner proprement plutôt que de continuer à
+      // muter un tableau qui n'est plus celui affiché.
+      const nodesAtDragStart = this.nodes;
       let last = svgPointFromEvent(this.svg, e);
       let moved = false;
 
       const onMove = (ev: PointerEvent) => {
-        if (ev.pointerId !== e.pointerId) return;
+        if (ev.pointerId !== e.pointerId || this.nodes !== nodesAtDragStart) return;
         if (!moved) {
           moved = true;
           this.callbacks?.onDragStart?.();
@@ -168,7 +173,7 @@ export class NodeEditor {
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
         el.removeEventListener("pointercancel", onUp);
-        if (moved) this.callbacks?.onDragEnd?.();
+        if (moved && this.nodes === nodesAtDragStart) this.callbacks?.onDragEnd?.();
       };
 
       el.addEventListener("pointermove", onMove);

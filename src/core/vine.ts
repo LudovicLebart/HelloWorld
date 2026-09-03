@@ -43,3 +43,66 @@ export function regenerateVine(nodes: EditableNode[], params: VineParams): VineR
     leaves: placeBrush(curve, { ...params.brush, taperStart: params.taperStart, taperEnd: params.taperEnd }),
   };
 }
+
+/** Forme persistable d'une liane : juste assez pour la reconstruire (nœuds,
+    liane parente éventuelle, paramètres utilisés) — tout le reste (curve,
+    polygone, feuilles) est dérivé et se recalcule via regenerateVine(). */
+export interface SerializedVine {
+  id: string;
+  nodes: EditableNode[];
+  parentId?: string;
+  params: VineParams;
+}
+
+/** Sérialise un ensemble de lianes (undo/redo comme sauvegarde locale utilisent le même format). */
+export function serializeVines(
+  vines: Map<string, { nodes: EditableNode[]; parentId?: string; params: VineParams }>,
+): string {
+  const list: SerializedVine[] = [...vines].map(([id, v]) => ({
+    id,
+    nodes: v.nodes,
+    parentId: v.parentId,
+    params: v.params,
+  }));
+  return JSON.stringify(list);
+}
+
+function isPoint(v: unknown): v is Point {
+  return typeof v === "object" && v !== null && typeof (v as Point).x === "number" && typeof (v as Point).y === "number";
+}
+
+function isEditableNode(v: unknown): v is EditableNode {
+  if (typeof v !== "object" || v === null) return false;
+  const n = v as EditableNode;
+  return isPoint(n.point) && isPoint(n.handleIn) && isPoint(n.handleOut);
+}
+
+function isSerializedVine(v: unknown): v is SerializedVine {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    Array.isArray(o.nodes) &&
+    o.nodes.every(isEditableNode) &&
+    (o.parentId === undefined || typeof o.parentId === "string") &&
+    typeof o.params === "object" &&
+    o.params !== null
+  );
+}
+
+/**
+ * Désérialise un instantané en validant sa forme — une chaîne corrompue,
+ * vide ou d'un format incompatible (schéma antérieur, donnée altérée) donne
+ * `null` plutôt que d'exploser plus loin dans le pipeline de régénération,
+ * pour qu'une sauvegarde locale invalide ne puisse jamais bloquer le
+ * démarrage de l'application.
+ */
+export function deserializeVines(json: string): SerializedVine[] | null {
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed) || !parsed.every(isSerializedVine)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
