@@ -77,8 +77,10 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       tous les motifs dans un autre (`#layer-stem`/`#layer-leaves`, plus de
       regroupement par liane à l'export) — voir
       [`docs/how-to/exporter-pour-cnc-laser.md`](docs/how-to/exporter-pour-cnc-laser.md)
-- [ ] Export séparé par motif (toutes les feuilles ensemble, toutes les volutes
-      ensemble, etc.), utile si chaque motif va dans un matériau différent
+- [x] Export séparé par motif (toutes les feuilles ensemble, toutes les volutes
+      ensemble, etc.), utile si chaque motif va dans un matériau différent — un calque
+      `#layer-<motifId>` par motif effectivement utilisé, plus de calque unique
+      mélangeant tous les motifs
 
 ## Infrastructure
 

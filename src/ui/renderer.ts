@@ -157,11 +157,13 @@ export class Renderer {
    *
    * Contrairement à l'affichage en direct (groupé par liane, pour la
    * sélection au clic), l'export regroupe TOUTES les tiges de TOUTES les
-   * grappes dans un unique calque `#layer-stem`, et tous les motifs dans un
-   * unique `#layer-leaves` couvrant tout le canevas — pour pouvoir découper
-   * en un seul lot toutes les tiges dans un matériau et tous les motifs dans
-   * un autre, sans avoir à les regrouper manuellement liane par liane dans
-   * le logiciel de découpe. Voir docs/how-to/exporter-pour-cnc-laser.md.
+   * grappes dans un unique calque `#layer-stem`, et sépare les motifs par
+   * type — un calque `#layer-<motifId>` par motif effectivement utilisé
+   * (`#layer-leaf`, `#layer-volute`, ...), plutôt qu'un unique calque
+   * mélangeant tous les motifs — pour pouvoir découper en un seul lot tout
+   * ce qui va dans un même matériau, sans avoir à regrouper manuellement
+   * liane par liane ni trier motif par motif dans le logiciel de découpe.
+   * Voir docs/how-to/exporter-pour-cnc-laser.md.
    */
   exportSVG(clusters: ExportCluster[]): string {
     const rect = this.svg.getBoundingClientRect();
@@ -176,8 +178,17 @@ export class Renderer {
 
     const stemLayer = document.createElementNS(SVG_NS, "g");
     stemLayer.setAttribute("id", "layer-stem");
-    const leavesLayer = document.createElementNS(SVG_NS, "g");
-    leavesLayer.setAttribute("id", "layer-leaves");
+    const leafLayersByMotif = new Map<string, SVGGElement>();
+
+    function leafLayerFor(motifId: string): SVGGElement {
+      let layer = leafLayersByMotif.get(motifId);
+      if (!layer) {
+        layer = document.createElementNS(SVG_NS, "g");
+        layer.setAttribute("id", `layer-${motifId}`);
+        leafLayersByMotif.set(motifId, layer);
+      }
+      return layer;
+    }
 
     for (const cluster of clusters) {
       const stem = document.createElementNS(SVG_NS, "path");
@@ -187,13 +198,13 @@ export class Renderer {
 
       for (const leaves of cluster.leafGroups) {
         for (const leaf of leaves) {
-          leavesLayer.appendChild(createLeafElement(leaf));
+          leafLayerFor(leaf.motifId).appendChild(createLeafElement(leaf));
         }
       }
     }
 
     svg.appendChild(stemLayer);
-    svg.appendChild(leavesLayer);
+    for (const layer of leafLayersByMotif.values()) svg.appendChild(layer);
 
     return new XMLSerializer().serializeToString(svg);
   }
