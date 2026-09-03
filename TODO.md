@@ -91,8 +91,10 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       `src/core/*.test.ts` — voir [Architecture des modules](docs/reference/architecture.md#tests-automatisés).
       Tourne en CI (`npm test`) avant chaque build/déploiement, un test qui casse
       bloque le déploiement. `src/ui/`/`main.ts` restent vérifiés manuellement.
-- [ ] PWA / usage hors-ligne sur téléphone (aujourd'hui : site web classique, nécessite
-      une connexion pour charger la page)
+- [x] PWA / usage hors-ligne sur téléphone : manifest + service worker
+      (`vite-plugin-pwa`, précache tout le shell buildé), installable sur l'écran
+      d'accueil, fonctionne sans connexion une fois ouverte une première fois — voir
+      [Installer l'app et l'utiliser hors-ligne](docs/how-to/installer-hors-ligne.md)
 
 ## Hors-scope pour l'instant
 

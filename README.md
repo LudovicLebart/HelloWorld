@@ -6,7 +6,9 @@ volutes et fleurs selon des règles réglables, avec un export SVG en chemins fe
 pour la découpe CNC/laser (pensé pour l'incrustation en lutherie).
 
 **Démo en ligne :** [ludoviclebart.github.io/HelloWorld](https://ludoviclebart.github.io/HelloWorld/)
-— aucune installation nécessaire, fonctionne sur téléphone.
+— aucune installation nécessaire, fonctionne sur téléphone. Installable comme une app
+et utilisable hors-ligne une fois ouverte une première fois — voir
+[Installer l'app et l'utiliser hors-ligne](docs/how-to/installer-hors-ligne.md).
 
 ## Démarrage local
 

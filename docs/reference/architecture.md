@@ -11,6 +11,8 @@ src/
   assets/   silhouettes de motifs en coordonnées locales unitaires
   config.ts constantes ajustables (clé de stockage, seuils de geste, limites) — jamais de valeur de ce type ailleurs en dur
   main.ts   orchestrateur : état de l'app, câblage core <-> ui
+public/
+  icons/    icônes de l'app (manifest PWA, favicon) — voir plus bas
 ```
 
 ## `src/core/`
@@ -90,3 +92,25 @@ tige, placement du brush, point-dans-masque), la fusion booléenne et son corner
 guides pratiques de `docs/how-to/`. Un push sur `master` fait tourner ces tests avant
 le build et le déploiement (`.github/workflows/deploy-pages.yml`) : un test qui casse
 bloque le déploiement.
+
+## PWA / hors-ligne
+
+`vite-plugin-pwa` (configuré dans `vite.config.ts`) génère au build un service worker
+(`dist/sw.js`, stratégie `generateSW` de Workbox) qui précache tout le shell buildé
+(JS, CSS, HTML, icônes) — l'app fonctionne hors-ligne dès la deuxième visite et
+s'installe comme une app sur téléphone ou ordinateur, voir
+[Installer l'app et l'utiliser hors-ligne](../how-to/installer-hors-ligne.md).
+`registerType: "autoUpdate"` met à jour le service worker en tâche de fond à chaque
+visite en ligne, sans action de l'utilisateur.
+
+Le manifest (`manifest.webmanifest`, nom/icônes/couleurs/`display: standalone`) est
+déclaré dans la même config plutôt qu'en fichier statique séparé — `id`/`start_url`/
+`scope` valent tous `/HelloWorld/` (le sous-chemin d'hébergement GitHub Pages, voir
+`base` dans `vite.config.ts`). Les icônes (`public/icons/`) sont un `.svg` (favicon,
+sert aussi de source) et deux `.png` rasterisés (192×192, 512×512, plus un
+`apple-touch-icon.png` 180×180) — aucune n'est déclarée « maskable », donc pas
+besoin de marge de sécurité dans le dessin.
+
+Le service worker n'est actif qu'en build de production (`npm run build` /
+`vite preview`), jamais en `npm run dev` — évite qu'un cache de service worker
+interfère avec le rechargement à chaud pendant le développement.
