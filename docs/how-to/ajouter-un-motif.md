@@ -9,8 +9,14 @@ construit une rangée par motif à partir du registre `src/assets/motifs.ts`.
 
 Pour une silhouette fixe (une forme dessinée à la main dans Inkscape/Illustrator par
 exemple), déposez le fichier dans `src/assets/motifs/` — c'est tout, aucun code à
-écrire ni à toucher. Le nom du fichier (sans l'extension) devient l'identifiant du
-motif et son libellé dans la barre d'outils (`vrille-double.svg` → « Vrille double »).
+écrire ni à toucher. Le nom du fichier (sans l'extension) devient le libellé dans la
+barre d'outils (`vrille double.svg` → « Vrille double ») et, une fois réduit à des
+lettres/chiffres/tirets ASCII (accents et espaces retirés), son identifiant interne —
+utilisé tel quel comme `id` du calque à l'export, qui doit rester un nom XML valide
+(`vrille double.svg` → id `vrille-double`, calque `#layer-vrille-double`). Si cet
+identifiant entre en collision avec un motif interne ou un autre fichier externe déjà
+chargé, le premier motif à l'avoir revendiqué garde la main — le second est
+simplement ignoré (aucun message d'erreur, aucun plantage).
 
 Contraintes sur le fichier, dans le même esprit que la géométrie locale des motifs
 internes :

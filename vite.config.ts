@@ -8,6 +8,10 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
+      // Les icônes du manifest (icons/*.png) sont déjà couvertes par globPatterns
+      // (glob sur tout /icons, mêmes fichiers) : sans ce false, vite-plugin-pwa les
+      // ajoute une seconde fois au précache par sa propre logique.
+      includeManifestIcons: false,
       // precache tout le shell buildé (JS/CSS/HTML/icônes) : l'app tourne hors-ligne
       // une fois visitée une première fois, y compris tracer/éditer/exporter — rien
       // de tout ça n'appelle de réseau, voir docs/how-to/installer-hors-ligne.md.

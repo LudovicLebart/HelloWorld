@@ -1,6 +1,6 @@
 import type { EditableNode, Point } from "../core/types";
 import { svgPointFromEvent } from "./pointerCapture";
-import { ANCHOR_TAP_DELAY } from "../config";
+import { ANCHOR_TAP_DELAY, TAP_DRAG_THRESHOLD } from "../config";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -190,14 +190,20 @@ export class NodeEditor {
       // comparaison ci-dessous permet d'abandonner proprement plutôt que de continuer à
       // muter un tableau qui n'est plus celui affiché.
       const nodesAtDragStart = this.nodes;
+      // Comme attachStemDrag (pointerCapture.ts) : un tactile ne reporte quasiment
+      // jamais un pointerup à la position exacte du pointerdown, un simple tap sans
+      // seuil de tolérance ne déclencherait donc quasiment jamais onTap au doigt.
+      const startClient = { x: e.clientX, y: e.clientY };
       let last = svgPointFromEvent(this.svg, e);
       let moved = false;
 
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== e.pointerId || this.nodes !== nodesAtDragStart) return;
         if (!moved) {
+          if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_DRAG_THRESHOLD) return;
           moved = true;
           this.callbacks?.onDragStart?.();
+          last = svgPointFromEvent(this.svg, ev); // repart du point courant, pas de saut lié au trajet sous le seuil
         }
         const cur = svgPointFromEvent(this.svg, ev);
         applyDelta({ x: cur.x - last.x, y: cur.y - last.y });

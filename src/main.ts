@@ -21,6 +21,7 @@ import { saveToStorage as persistSnapshot, loadFromStorage as readPersistedSnaps
 import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
 import { Renderer, type ExportCluster } from "./ui/renderer";
 import { NodeEditor } from "./ui/nodeEditor";
+import { buildMotifRow, motifRows, updateMotifOrderButtons } from "./ui/motifList";
 import { STORAGE_KEY, UNDO_LIMIT, BRANCH_SNAP_RADIUS, DENSITY_EPSILON_RANGE } from "./config";
 import { MOTIFS } from "./assets/motifs";
 
@@ -43,63 +44,6 @@ const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")
 const finishMaskButton = document.querySelector<HTMLButtonElement>("#finish-mask")!;
 const clearMaskButton = document.querySelector<HTMLButtonElement>("#clear-mask")!;
 const motifListEl = document.querySelector<HTMLOListElement>("#motif-list")!;
-
-/** Une rangée de la séquence de motifs — voir index.html (#motif-list). */
-function motifRows(): HTMLLIElement[] {
-  return [...motifListEl.querySelectorAll<HTMLLIElement>(".motif-row")];
-}
-
-/** Construit la rangée d'un motif (voir style.css .motif-row) : ordre, activation, échelle, jitter — un seul gabarit pour les motifs internes comme pour ceux chargés depuis un .svg externe (assets/motifs.ts). */
-function buildMotifRow(motif: (typeof MOTIFS)[number]): HTMLLIElement {
-  const li = document.createElement("li");
-  li.className = "motif-row";
-  li.dataset.motif = motif.id;
-
-  const order = document.createElement("div");
-  order.className = "motif-order";
-  const up = document.createElement("button");
-  up.type = "button";
-  up.className = "motif-up";
-  up.setAttribute("aria-label", "Monter");
-  up.textContent = "↑";
-  const down = document.createElement("button");
-  down.type = "button";
-  down.className = "motif-down";
-  down.setAttribute("aria-label", "Descendre");
-  down.textContent = "↓";
-  order.append(up, down);
-
-  const activeLabel = document.createElement("label");
-  activeLabel.className = "checkbox";
-  const active = document.createElement("input");
-  active.type = "checkbox";
-  active.className = "motif-active";
-  active.checked = true;
-  activeLabel.append(active, document.createTextNode(` ${motif.label}`));
-
-  const scaleLabel = document.createElement("label");
-  const scale = document.createElement("input");
-  scale.type = "range";
-  scale.className = "motif-scale";
-  scale.min = "4";
-  scale.max = "40";
-  scale.step = "1";
-  scale.value = String(motif.defaultScale);
-  scaleLabel.append("Échelle", scale);
-
-  const jitterLabel = document.createElement("label");
-  const jitter = document.createElement("input");
-  jitter.type = "range";
-  jitter.className = "motif-jitter";
-  jitter.min = "0";
-  jitter.max = "100";
-  jitter.step = "1";
-  jitter.value = "20";
-  jitterLabel.append("Jitter", jitter);
-
-  li.append(order, activeLabel, scaleLabel, jitterLabel);
-  return li;
-}
 
 for (const motif of MOTIFS) {
   motifListEl.appendChild(buildMotifRow(motif));
@@ -143,7 +87,7 @@ function currentEpsilon(): number {
 
 /** Lit la séquence de motifs dans l'ordre actuel du DOM (#motif-list) — un clic sur ↑/↓ réordonne les <li>, l'ordre du DOM fait foi. Chaque motif actif garde sa propre échelle/jitter. */
 function currentSequence(): MotifSequenceEntry[] {
-  const rows = motifRows();
+  const rows = motifRows(motifListEl);
   const active = rows.filter((li) => li.querySelector<HTMLInputElement>(".motif-active")!.checked);
   const chosen = active.length > 0 ? active : rows.slice(0, 1);
   return chosen.map((li) => ({
@@ -411,16 +355,7 @@ for (const input of [spacingInput, thicknessInput]) {
   input.addEventListener("change", () => saveSnapshot());
 }
 
-/** Active/désactive les flèches en bout de liste (rien à monter au-dessus du premier, rien à descendre sous le dernier). */
-function updateMotifOrderButtons(): void {
-  const rows = motifRows();
-  rows.forEach((li, i) => {
-    li.querySelector<HTMLButtonElement>(".motif-up")!.disabled = i === 0;
-    li.querySelector<HTMLButtonElement>(".motif-down")!.disabled = i === rows.length - 1;
-  });
-}
-
-for (const li of motifRows()) {
+for (const li of motifRows(motifListEl)) {
   li.querySelector<HTMLInputElement>(".motif-active")!.addEventListener("change", () => {
     refreshSelectedVine();
     saveSnapshot();
@@ -435,7 +370,7 @@ for (const li of motifRows()) {
     const prev = li.previousElementSibling;
     if (!prev) return;
     motifListEl.insertBefore(li, prev);
-    updateMotifOrderButtons();
+    updateMotifOrderButtons(motifListEl);
     refreshSelectedVine();
     saveSnapshot();
   });
@@ -443,12 +378,12 @@ for (const li of motifRows()) {
     const next = li.nextElementSibling;
     if (!next) return;
     motifListEl.insertBefore(next, li);
-    updateMotifOrderButtons();
+    updateMotifOrderButtons(motifListEl);
     refreshSelectedVine();
     saveSnapshot();
   });
 }
-updateMotifOrderButtons();
+updateMotifOrderButtons(motifListEl);
 
 clearButton.addEventListener("click", () => {
   if (vines.size === 0) return;

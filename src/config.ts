@@ -33,3 +33,7 @@ export const DENSITY_EPSILON_RANGE = { min: 0.5, max: 12 };
     voir si un second clic arrive et en fait un double-clic (suppression du nœud) à la
     place, sans quoi les deux gestes se déclencheraient l'un après l'autre. */
 export const ANCHOR_TAP_DELAY = 280;
+
+/** Plages des curseurs "Échelle" et "Jitter" propres à chaque motif (voir #motif-list, ui/motifList.ts). */
+export const MOTIF_SCALE_RANGE = { min: 4, max: 40 };
+export const MOTIF_JITTER_RANGE = { min: 0, max: 100 };

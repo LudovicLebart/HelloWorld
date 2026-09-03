@@ -45,7 +45,8 @@ démarrage.
 | --- | --- |
 | `pointerCapture.ts` | Unifie souris/stylet/tactile via la Pointer Events API ; `attachPointerCapture` pour le tracé libre, `attachClickToPlace` pour le mode « Points ». |
 | `renderer.ts` | Gère le DOM SVG : crée/actualise les groupes de liane, résout `motifId → pathD` via `getMotif()`, sérialise l'export. `setMask()` pose/retire un `clip-path` SVG sur le calque des lianes pour le recadrage en direct (l'export, lui, découpe réellement la géométrie — voir `core/junction.ts`). `exportSVG()` regroupe toutes les tiges dans un calque `#layer-stem` et sépare les motifs un par un dans `#layer-<motifId>` (un calque par motif effectivement utilisé), couvrant tout le canevas — pas de groupe par liane comme à l'écran, voir [Exporter pour CNC/laser](../how-to/exporter-pour-cnc-laser.md). |
-| `nodeEditor.ts` | Overlay d'édition (ancres + poignées glissables) pour la liane sélectionnée. Un tap sur une ancre bascule son nœud lisse/coin, différé de `ANCHOR_TAP_DELAY` (config.ts) pour rester distinguable d'un double-clic (qui supprime le nœud) sur le même élément. |
+| `nodeEditor.ts` | Overlay d'édition (ancres + poignées glissables) pour la liane sélectionnée. Un tap (mouvement sous `TAP_DRAG_THRESHOLD`, comme `attachStemDrag`) sur une ancre bascule son nœud lisse/coin, différé de `ANCHOR_TAP_DELAY` (config.ts) pour rester distinguable d'un double-clic (qui supprime le nœud) sur le même élément. |
+| `motifList.ts` | Construit et interroge le DOM de `#motif-list` (une rangée par motif : ordre, activation, échelle, jitter) — pure DOM, aucun état applicatif ; `main.ts` y branche les gestionnaires d'événements (undo, sauvegarde, régénération). |
 
 ## `src/assets/`
 
