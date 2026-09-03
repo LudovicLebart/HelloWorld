@@ -2,15 +2,19 @@
 
 ## Le geste
 
-En mode **Libre**, commencez un nouveau tracé à quelques pixels d'une liane
-existante — juste à côté de sa tige, pas exactement dessus (cliquer sur la tige la
-sélectionne pour l'édition plutôt que de démarrer un tracé). Si le point de départ
-tombe à moins de 16 px d'un point de la liane existante, le nouveau tracé s'accroche
-automatiquement dessus : sa racine est posée exactement sur le point le plus proche de
-la tige parente, et devient une branche.
+Tirez directement depuis la tige d'une liane existante : un simple tap (sans
+déplacement) la sélectionne toujours pour édition, mais dès que vous faites glisser le
+pointeur au-delà de quelques pixels, le geste devient un nouveau tracé — une branche,
+ancrée exactement là où vous avez posé le doigt ou cliqué sur la tige parente. La zone
+cliquable de la tige déborde largement de son contour visible (y compris quand elle est
+fine ou effilée), pour rester facile à attraper à la souris comme au doigt.
 
-Le mode **Points** fonctionne de la même façon : c'est le tout premier clic qui décide
-si le nouveau squelette est une branche ou une liane indépendante.
+Vous pouvez aussi commencer un tracé indépendant à quelques pixels d'une liane
+existante — sans toucher sa tige — : s'il démarre à moins de 16 px d'un point de la
+liane, il s'accroche automatiquement dessus et devient une branche. C'est un
+mécanisme de secours pratique quand on trace près d'une liane sans viser sa tige
+précisément ; le mode **Points** l'utilise aussi (c'est le tout premier clic qui
+décide si le nouveau squelette est une branche ou une liane indépendante).
 
 ## Ce qui différencie une branche d'une liane normale
 

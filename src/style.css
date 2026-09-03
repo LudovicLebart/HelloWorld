@@ -117,7 +117,12 @@ button#clear {
 
 .stem-path {
   fill: #6b4a2b;
-  stroke: none;
+  /* Trait transparent : élargit la zone cliquable/tactile bien au-delà du
+     contour visible, sans rien changer à l'apparence (la tige peut être
+     fine, surtout aux extrémités effilées). */
+  stroke: transparent;
+  stroke-width: 22px;
+  cursor: pointer;
 }
 
 .motif-instance {
@@ -187,8 +192,4 @@ button#clear {
   stroke: #d1573b;
   stroke-width: 2;
   cursor: move;
-}
-
-.stem-path {
-  cursor: pointer;
 }

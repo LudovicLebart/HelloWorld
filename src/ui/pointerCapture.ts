@@ -62,6 +62,65 @@ export function attachPointerCapture(svg: SVGSVGElement, callbacks: StrokeCallba
   };
 }
 
+const TAP_THRESHOLD = 5; // px écran : en-deçà, un pointerdown+up sur la tige est un tap (sélection), pas un tracé de branche
+
+export interface StemDragCallbacks {
+  /** Pointerdown suivi d'un pointerup sans déplacement significatif : sélectionner la liane. */
+  onTap: () => void;
+  onBranchStart?: (point: Point) => void;
+  onBranchMove: (points: Point[]) => void;
+  onBranchEnd: (points: Point[]) => void;
+}
+
+/**
+ * Attache à un élément de tige le geste "tirer une branche" : un simple tap
+ * sélectionne la liane pour édition (comportement existant), mais dès que le
+ * pointeur se déplace au-delà d'un petit seuil, le geste devient un tracé de
+ * branche à part entière — capturé sur la tige elle-même (donc suivi même
+ * une fois le pointeur sorti de sa fine silhouette). C'est le geste
+ * principal pour créer une branche : bien plus fiable que viser une zone de
+ * quelques pixels à côté de la tige.
+ */
+export function attachStemDrag(svg: SVGSVGElement, stem: SVGPathElement, callbacks: StemDragCallbacks): void {
+  stem.addEventListener("pointerdown", (e: PointerEvent) => {
+    e.stopPropagation();
+    if (e.button !== undefined && e.button !== 0) return;
+    stem.setPointerCapture(e.pointerId);
+
+    const startClient = { x: e.clientX, y: e.clientY };
+    let dragging = false;
+    let points: Point[] = [];
+
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== e.pointerId) return;
+      if (!dragging) {
+        if (Math.hypot(ev.clientX - startClient.x, ev.clientY - startClient.y) < TAP_THRESHOLD) return;
+        dragging = true;
+        points = [svgPointFromEvent(svg, e)];
+        callbacks.onBranchStart?.(points[0]);
+      }
+      points.push(svgPointFromEvent(svg, ev));
+      callbacks.onBranchMove(points);
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== e.pointerId) return;
+      stem.removeEventListener("pointermove", onMove);
+      stem.removeEventListener("pointerup", onUp);
+      stem.removeEventListener("pointercancel", onUp);
+      if (dragging) {
+        callbacks.onBranchEnd(points);
+      } else {
+        callbacks.onTap();
+      }
+    };
+
+    stem.addEventListener("pointermove", onMove);
+    stem.addEventListener("pointerup", onUp);
+    stem.addEventListener("pointercancel", onUp);
+  });
+}
+
 export interface ClickToPlaceCallbacks {
   onAdd: (point: Point) => void;
   onFinish: () => void;

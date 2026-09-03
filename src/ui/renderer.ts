@@ -1,6 +1,7 @@
 import type { Point } from "../core/types";
 import type { BrushPlacement } from "../core/brush";
 import { getMotif } from "../assets/motifs";
+import { attachStemDrag, type StemDragCallbacks } from "./pointerCapture";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -54,8 +55,12 @@ export class Renderer {
     this.liveStroke.setAttribute("points", points ? pointsToPolylineAttr(points) : "");
   }
 
-  /** Crée une nouvelle liane vide et retourne son identifiant ; `onSelect` est appelé au clic sur sa tige. */
-  createVine(onSelect: () => void): string {
+  /**
+   * Crée une nouvelle liane vide et retourne son identifiant. `callbacks`
+   * gère les gestes sur sa tige : un tap la sélectionne pour édition, un
+   * drag en tire une branche (voir `attachStemDrag`).
+   */
+  createVine(callbacks: StemDragCallbacks): string {
     const id = `vine-${this.nextId++}`;
     const group = document.createElementNS(SVG_NS, "g");
     group.setAttribute("class", "vine");
@@ -65,12 +70,9 @@ export class Renderer {
     stemLayer.setAttribute("class", "layer-stem");
     const stem = document.createElementNS(SVG_NS, "path");
     stem.setAttribute("class", "stem-path");
-    // pointerdown : sélectionne sans laisser le tracé libre démarrer un nouveau tracé.
-    // click : même garde pour le mode "point par point", qui écoute "click" plutôt que "pointerdown".
-    stem.addEventListener("pointerdown", (e) => {
-      e.stopPropagation();
-      onSelect();
-    });
+    attachStemDrag(this.svg, stem, callbacks);
+    // Garde pour le mode "point par point", qui écoute "click" plutôt que "pointerdown" :
+    // un tap sur la tige ne doit pas aussi poser un nœud de tracé.
     stem.addEventListener("click", (e) => e.stopPropagation());
     stemLayer.appendChild(stem);
 

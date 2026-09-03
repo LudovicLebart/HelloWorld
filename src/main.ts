@@ -117,7 +117,18 @@ function selectVine(id: string): void {
 
 function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
   if (nodes.length < 2) return;
-  const id = renderer.createVine(() => selectVine(id));
+  const id = renderer.createVine({
+    onTap: () => selectVine(id),
+    // Tirer directement depuis la tige : le geste principal pour créer une
+    // branche, bien plus fiable que viser une zone étroite à côté de la
+    // tige (le point de départ est alors exactement là où le doigt/la
+    // souris a touché la tige parente).
+    onBranchMove: (points) => renderer.setLiveStroke(points),
+    onBranchEnd: (points) => {
+      renderer.setLiveStroke(null);
+      createVineFromNodes(nodesFromStroke(points, currentEpsilon()), id);
+    },
+  });
   vines.set(id, { nodes, parentId, curve: [], stemPolygon: [], leaves: [] });
   regenerateAndRender(id);
   selectVine(id);
