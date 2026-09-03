@@ -77,6 +77,30 @@ button#clear {
   color: var(--accent);
 }
 
+.mode-toggle {
+  display: flex;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mode-button {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+}
+
+.mode-button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+#finish-points {
+  background: #3d5a2c;
+  border-color: #3d5a2c;
+}
+
 #canvas-wrap {
   flex: 1;
   overflow: hidden;
@@ -108,4 +132,28 @@ button#clear {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.5;
+}
+
+#node-editor .handle-line {
+  stroke: #3b6bd1;
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+#node-editor .node-handle {
+  fill: #fff;
+  stroke: #3b6bd1;
+  stroke-width: 1.5;
+  cursor: move;
+}
+
+#node-editor .node-anchor {
+  fill: #fff;
+  stroke: #d1573b;
+  stroke-width: 2;
+  cursor: move;
+}
+
+.stem-path {
+  cursor: pointer;
 }

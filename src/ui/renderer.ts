@@ -8,10 +8,18 @@ function pointsToPolylineAttr(points: Point[]): string {
   return points.map((p) => `${p.x},${p.y}`).join(" ");
 }
 
+interface VineGroup {
+  group: SVGGElement;
+  stem: SVGPathElement;
+  leavesLayer: SVGGElement;
+}
+
 export class Renderer {
   private svg: SVGSVGElement;
   private vinesLayer: SVGGElement;
   private liveStroke: SVGPolylineElement;
+  private vines = new Map<string, VineGroup>();
+  private nextId = 1;
 
   constructor(svg: SVGSVGElement) {
     this.svg = svg;
@@ -28,20 +36,45 @@ export class Renderer {
     this.liveStroke.setAttribute("points", points ? pointsToPolylineAttr(points) : "");
   }
 
-  /** Ajoute une liane complète (tige + feuilles) comme groupe dans le calque des lianes. */
-  addVine(stemPathD: string, leaves: BrushPlacement[]): SVGGElement {
+  /** Crée une nouvelle liane vide et retourne son identifiant ; `onSelect` est appelé au clic sur sa tige. */
+  createVine(onSelect: () => void): string {
+    const id = `vine-${this.nextId++}`;
     const group = document.createElementNS(SVG_NS, "g");
     group.setAttribute("class", "vine");
+    group.dataset.vineId = id;
 
     const stemLayer = document.createElementNS(SVG_NS, "g");
     stemLayer.setAttribute("class", "layer-stem");
     const stem = document.createElementNS(SVG_NS, "path");
     stem.setAttribute("class", "stem-path");
-    stem.setAttribute("d", stemPathD);
+    // pointerdown : sélectionne sans laisser le tracé libre démarrer un nouveau tracé.
+    // click : même garde pour le mode "point par point", qui écoute "click" plutôt que "pointerdown".
+    stem.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      onSelect();
+    });
+    stem.addEventListener("click", (e) => e.stopPropagation());
     stemLayer.appendChild(stem);
 
     const leavesLayer = document.createElementNS(SVG_NS, "g");
     leavesLayer.setAttribute("class", "layer-leaves");
+
+    group.appendChild(stemLayer);
+    group.appendChild(leavesLayer);
+    this.vinesLayer.appendChild(group);
+
+    this.vines.set(id, { group, stem, leavesLayer });
+    return id;
+  }
+
+  /** Remplace le contenu (tige + feuilles) d'une liane existante — appelé à chaque édition de ses nœuds. */
+  updateVine(id: string, stemPathD: string, leaves: BrushPlacement[]): void {
+    const vine = this.vines.get(id);
+    if (!vine) return;
+
+    vine.stem.setAttribute("d", stemPathD);
+
+    vine.leavesLayer.replaceChildren();
     for (const leaf of leaves) {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("class", "leaf-instance");
@@ -51,24 +84,20 @@ export class Renderer {
         "transform",
         `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${leaf.scale})`,
       );
-      leavesLayer.appendChild(path);
+      vine.leavesLayer.appendChild(path);
     }
-
-    group.appendChild(stemLayer);
-    group.appendChild(leavesLayer);
-    this.vinesLayer.appendChild(group);
-    return group;
   }
 
   clear(): void {
     this.vinesLayer.replaceChildren();
+    this.vines.clear();
     this.setLiveStroke(null);
   }
 
   /** Sérialise le canevas en SVG autonome, prêt pour l'export (calques Tige / Feuilles séparés). */
   exportSVG(): string {
     const clone = this.svg.cloneNode(true) as SVGSVGElement;
-    clone.querySelectorAll(".live-stroke").forEach((el) => el.remove());
+    clone.querySelectorAll(".live-stroke, #node-editor").forEach((el) => el.remove());
     clone.setAttribute("xmlns", SVG_NS);
 
     const rect = this.svg.getBoundingClientRect();

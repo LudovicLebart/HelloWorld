@@ -11,6 +11,15 @@
       <header id="toolbar">
         <h1>Vignes &amp; Arabesques</h1>
         <div class="controls">
+          <div class="mode-toggle" role="group" aria-label="Mode de tracé">
+            <button id="mode-freehand" class="mode-button active">Libre</button>
+            <button id="mode-points" class="mode-button">Points</button>
+          </div>
+          <button id="finish-points" hidden>Terminer le tracé</button>
+          <label>
+            Densité des points
+            <input id="density" type="range" min="0" max="100" value="55" step="1" />
+          </label>
           <label>
             Espacement
             <input id="spacing" type="range" min="8" max="60" value="26" step="1" />

@@ -1,60 +1,58 @@
-import type { CurveSample, Point } from "./types";
+import type { CurveSample, EditableNode, Point } from "./types";
 
 const DENSE_STEPS_PER_SEGMENT = 16;
 
-// Paramétrisation centripète (alpha = 0.5) : contrairement à la variante
-// uniforme, elle ne produit ni boucle ni surtension quand les points de
-// contrôle sont espacés de façon très inégale — exactement le cas d'un
-// tracé à main levée simplifié par RDP (dense dans les virages, épars
-// dans les portions droites). C'est ce qui rend la courbe "douce" plutôt
-// que cabossée près des changements de direction marqués.
-const CENTRIPETAL_ALPHA = 0.5;
-
-function lerp(a: Point, b: Point, t: number): Point {
-  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-}
-
-function knotStep(t: number, p0: Point, p1: Point): number {
-  const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
-  // Plancher non nul : évite une division par zéro quand deux points
-  // coïncident (notamment les points fantômes dupliqués aux extrémités).
-  return t + Math.max(Math.pow(dist, CENTRIPETAL_ALPHA), 1e-6);
-}
-
-function centripetalCatmullRom(p0: Point, p1: Point, p2: Point, p3: Point, u: number): Point {
-  const t0 = 0;
-  const t1 = knotStep(t0, p0, p1);
-  const t2 = knotStep(t1, p1, p2);
-  const t3 = knotStep(t2, p2, p3);
-  const t = t1 + u * (t2 - t1);
-
-  const a1 = lerp(p0, p1, (t - t0) / (t1 - t0));
-  const a2 = lerp(p1, p2, (t - t1) / (t2 - t1));
-  const a3 = lerp(p2, p3, (t - t2) / (t3 - t2));
-  const b1 = lerp(a1, a2, (t - t0) / (t2 - t0));
-  const b2 = lerp(a2, a3, (t - t1) / (t3 - t1));
-  return lerp(b1, b2, (t - t1) / (t2 - t1));
+function normalize(v: Point): Point {
+  const len = Math.hypot(v.x, v.y);
+  if (len === 0) return { x: 0, y: 0 };
+  return { x: v.x / len, y: v.y / len };
 }
 
 /**
- * Interpole une spline de Catmull-Rom centripète à travers tous les points
- * de contrôle fournis, en dupliquant les extrémités pour que la courbe
- * passe bien par le premier et le dernier point.
+ * Calcule des poignées de contrôle par défaut pour une suite de points bruts
+ * (typiquement issus de la simplification RDP), de façon à produire une
+ * courbe lisse dès la création — chaque nœud reste ensuite librement
+ * éditable (position et poignées) via l'éditeur de nœuds.
  */
-function denseCatmullRom(controlPoints: Point[]): Point[] {
-  if (controlPoints.length < 2) return controlPoints.slice();
-  if (controlPoints.length === 2) return controlPoints.slice();
+export function autoHandles(points: Point[], smoothing = 0.25): EditableNode[] {
+  return points.map((p, i) => {
+    const prev = points[Math.max(0, i - 1)];
+    const next = points[Math.min(points.length - 1, i + 1)];
+    const tangent = normalize({ x: next.x - prev.x, y: next.y - prev.y });
+    const distPrev = Math.hypot(p.x - prev.x, p.y - prev.y);
+    const distNext = Math.hypot(next.x - p.x, next.y - p.y);
+    return {
+      point: { x: p.x, y: p.y },
+      handleIn: { x: p.x - tangent.x * distPrev * smoothing, y: p.y - tangent.y * distPrev * smoothing },
+      handleOut: { x: p.x + tangent.x * distNext * smoothing, y: p.y + tangent.y * distNext * smoothing },
+    };
+  });
+}
 
-  const pts = [controlPoints[0], ...controlPoints, controlPoints[controlPoints.length - 1]];
-  const dense: Point[] = [pts[1]];
+function bezierPoint(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
+  const mt = 1 - t;
+  const a = mt * mt * mt;
+  const b = 3 * mt * mt * t;
+  const c = 3 * mt * t * t;
+  const d = t * t * t;
+  return {
+    x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+    y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
+  };
+}
 
-  for (let i = 1; i < pts.length - 2; i++) {
-    const [p0, p1, p2, p3] = [pts[i - 1], pts[i], pts[i + 1], pts[i + 2]];
+/** Échantillonne densément la courbe de Bézier composite passant par tous les nœuds. */
+function denseFromNodes(nodes: EditableNode[]): Point[] {
+  if (nodes.length < 2) return nodes.map((n) => n.point);
+
+  const dense: Point[] = [nodes[0].point];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const a = nodes[i];
+    const b = nodes[i + 1];
     for (let step = 1; step <= DENSE_STEPS_PER_SEGMENT; step++) {
-      dense.push(centripetalCatmullRom(p0, p1, p2, p3, step / DENSE_STEPS_PER_SEGMENT));
+      dense.push(bezierPoint(a.point, a.handleOut, b.handleIn, b.point, step / DENSE_STEPS_PER_SEGMENT));
     }
   }
-
   return dense;
 }
 
@@ -78,7 +76,6 @@ function resampleEven(dense: Point[], step: number): Point[] {
   let segStart = dense[0];
   let segEnd = dense[1];
   let segLength = Math.hypot(segEnd.x - segStart.x, segEnd.y - segStart.y);
-  let distIntoSeg = 0;
   let traveled = 0;
 
   for (let i = 1; i < count; i++) {
@@ -89,9 +86,8 @@ function resampleEven(dense: Point[], step: number): Point[] {
       segStart = dense[segIndex];
       segEnd = dense[segIndex + 1];
       segLength = Math.hypot(segEnd.x - segStart.x, segEnd.y - segStart.y);
-      distIntoSeg = 0;
     }
-    distIntoSeg = targetDist - traveled;
+    const distIntoSeg = targetDist - traveled;
     const ratio = segLength === 0 ? 0 : distIntoSeg / segLength;
     result.push({
       x: segStart.x + (segEnd.x - segStart.x) * ratio,
@@ -102,21 +98,15 @@ function resampleEven(dense: Point[], step: number): Point[] {
   return result;
 }
 
-function normalize(v: Point): Point {
-  const len = Math.hypot(v.x, v.y);
-  if (len === 0) return { x: 0, y: 0 };
-  return { x: v.x / len, y: v.y / len };
-}
-
 /**
- * Construit le squelette final : interpole les points de contrôle simplifiés
- * en spline lisse, ré-échantillonne à pas régulier, puis calcule la tangente
- * et la normale exactes en chaque point (essentiel pour orienter tige et motifs).
+ * Construit le squelette final à partir des nœuds éditables : échantillonne
+ * la courbe de Bézier composite à pas régulier, puis calcule la tangente et
+ * la normale exactes en chaque point (essentiel pour orienter tige et motifs).
  */
-export function buildCurve(controlPoints: Point[], resampleStep = 4): CurveSample[] {
-  if (controlPoints.length < 2) return [];
+export function buildCurveFromNodes(nodes: EditableNode[], resampleStep = 4): CurveSample[] {
+  if (nodes.length < 2) return [];
 
-  const dense = denseCatmullRom(controlPoints);
+  const dense = denseFromNodes(nodes);
   const points = resampleEven(dense, resampleStep);
 
   const cumulative: number[] = [0];

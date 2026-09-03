@@ -3,6 +3,18 @@ export interface Point {
   y: number;
 }
 
+/**
+ * Nœud éditable du squelette : un point d'ancrage plus ses deux poignées
+ * de contrôle Bézier (en coordonnées absolues, comme dans Illustrator/
+ * Inkscape). Par défaut les poignées sont placées automatiquement pour
+ * un rendu lisse, mais l'utilisateur peut les faire glisser individuellement.
+ */
+export interface EditableNode {
+  point: Point;
+  handleIn: Point;
+  handleOut: Point;
+}
+
 /** Point échantillonné sur la spline, avec le repère local de la courbe en ce point. */
 export interface CurveSample {
   point: Point;
