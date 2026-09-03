@@ -86,8 +86,11 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 
 - [x] App web TypeScript + SVG natif (Vite), aucune installation nécessaire
 - [x] Déploiement continu vers GitHub Pages sur push `master`
-- [ ] Tests automatisés (aujourd'hui : vérifications manuelles ad hoc en cours de
-      développement, rien qui tourne en CI)
+- [x] Tests automatisés : suite Vitest par module de `core/` (géométrie, fusion
+      booléenne/corner join, historique, persistance, sérialisation), colocalisée en
+      `src/core/*.test.ts` — voir [Architecture des modules](docs/reference/architecture.md#tests-automatisés).
+      Tourne en CI (`npm test`) avant chaque build/déploiement, un test qui casse
+      bloque le déploiement. `src/ui/`/`main.ts` restent vérifiés manuellement.
 - [ ] PWA / usage hors-ligne sur téléphone (aujourd'hui : site web classique, nécessite
       une connexion pour charger la page)
 

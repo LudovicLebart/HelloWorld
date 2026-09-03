@@ -14,6 +14,7 @@ pour la découpe CNC/laser (pensé pour l'incrustation en lutherie).
 npm install
 npm run dev      # serveur de développement
 npm run build    # build de production dans dist/
+npm test         # tests automatisés (Vitest) — voir docs/reference/architecture.md
 ```
 
 ## Documentation
@@ -26,5 +27,6 @@ npm run build    # build de production dans dist/
 
 ## Déploiement
 
-Chaque push sur `master` redéploie automatiquement sur GitHub Pages via
-`.github/workflows/deploy-pages.yml`.
+Chaque push sur `master` fait tourner les tests automatisés (Vitest), puis — s'ils
+passent — build et redéploie sur GitHub Pages via `.github/workflows/deploy-pages.yml`.
+Un test qui casse bloque le déploiement.

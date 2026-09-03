@@ -75,3 +75,18 @@ jamais figé avant l'export.
 indépendant — c'est ce qui permet de cliquer précisément sur l'une d'elles pour la
 sélectionner. Seul l'export regroupe les lianes reliées par une chaîne de branches et
 fusionne leurs polygones via `unionStemPolygons()` en un contour unique.
+
+## Tests automatisés
+
+`npm test` (Vitest, environnement jsdom) exécute `src/core/*.test.ts` — un fichier de
+test par module de `core/`, colocalisé avec le code qu'il couvre. Portent
+volontairement sur `core/` uniquement (maths pures, sans DOM à simuler) : la géométrie
+(simplification RDP, poignées auto-lissées et nœuds coin, profil d'épaisseur de la
+tige, placement du brush, point-dans-masque), la fusion booléenne et son corner join
+(`unionStemPolygons`), l'historique annuler/rétablir, la persistance localStorage
+(défensive si indisponible), et la sérialisation d'un instantané de canevas
+(round-trip, rejet d'une donnée corrompue ou de forme incompatible). `src/ui/` et
+`main.ts` (DOM, gestes) restent vérifiés manuellement dans le navigateur — voir les
+guides pratiques de `docs/how-to/`. Un push sur `master` fait tourner ces tests avant
+le build et le déploiement (`.github/workflows/deploy-pages.yml`) : un test qui casse
+bloque le déploiement.
