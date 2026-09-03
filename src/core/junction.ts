@@ -16,6 +16,14 @@ function toRing(points: Point[]): [number, number][] {
  * recouvrent. Rendu ici en un unique `d` (un sous-chemin par polygone
  * résultant ; en pratique un seul si les tiges se touchent vraiment).
  *
+ * Même avec une seule tige (pas de branche), le polygone passe toujours par
+ * `union()` : c'est ce qui répare le « vrai corner join » — le contour brut
+ * d'une tige (offset de chaque côté de la courbe, voir `buildStemPolygon`)
+ * peut légèrement s'auto-intersecter dans un virage très serré, et `union()`
+ * normalise n'importe quel polygone (auto-intersectant ou non) en un jeu de
+ * contours simples, sans recouvrement — exactement ce qu'exige une découpe
+ * CNC/laser propre.
+ *
  * Si `mask` est fourni (zone de travail définie par l'utilisateur — voir
  * docs/how-to/definir-une-zone-de-travail.md), le contour fusionné est en
  * plus découpé par intersection booléenne avec le masque : le tracé exporté
@@ -26,13 +34,8 @@ export function unionStemPolygons(polygons: Point[][], mask?: Point[] | null): s
   const nonEmpty = polygons.filter((p) => p.length >= 3);
   if (nonEmpty.length === 0) return "";
 
-  let merged: ReturnType<typeof polygonClipping.union>;
-  if (nonEmpty.length === 1) {
-    merged = [[toRing(nonEmpty[0])]];
-  } else {
-    const [first, ...rest] = nonEmpty.map((p) => [toRing(p)]);
-    merged = polygonClipping.union(first, ...rest);
-  }
+  const [first, ...rest] = nonEmpty.map((p) => toRing(p));
+  let merged = polygonClipping.union([first], ...rest.map((ring) => [ring]));
 
   if (mask && mask.length >= 3) {
     merged = polygonClipping.intersection(merged, [toRing(mask)]);

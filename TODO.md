@@ -13,8 +13,11 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       centripète, toutes deux remplacées)
 - [x] Tige en polygone fermé, épaisseur variable (fine aux extrémités)
 - [x] Calcul exact de la tangente et de la normale en tout point
-- [ ] Vrai « corner join » quand deux segments de tige forment un angle très aigu (cas
-      limite non traité, l'offset peut légèrement se chevaucher)
+- [x] Vrai « corner join » quand deux segments de tige forment un angle très aigu :
+      `unionStemPolygons()` (`core/junction.ts`) passe toujours par `union()`, même
+      pour une liane seule sans branche — l'auto-intersection éventuelle du contour
+      brut dans un virage très serré est ainsi normalisée en contours simples, sans
+      recouvrement, à l'export
 
 ## Étape 2 — Système de brush paramétrique (l'habillage)
 
