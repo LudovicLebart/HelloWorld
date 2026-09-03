@@ -17,9 +17,9 @@ src/
 
 | Fichier | Rôle |
 | --- | --- |
-| `types.ts` | `Point`, `EditableNode` (nœud + poignées Bézier), `CurveSample` (point échantillonné + tangente/normale/longueur d'arc). |
+| `types.ts` | `Point`, `EditableNode` (nœud + poignées Bézier, `corner?: boolean` pour un nœud « coin » à poignées indépendantes), `CurveSample` (point échantillonné + tangente/normale/longueur d'arc). |
 | `simplify.ts` | Ramer-Douglas-Peucker : réduit un tracé brut à ses points de contrôle significatifs. |
-| `spline.ts` | `autoHandles()` calcule des poignées lissées par défaut ; `buildCurveFromNodes()` échantillonne la courbe de Bézier composite à pas régulier et calcule tangente/normale en chaque point. `insertNodeAt`/`removeNodeAt` ajoutent/retirent un nœud sur une liane existante (poignées relissées localement autour du point touché seulement) ; `nearestSegmentIndex` trouve le segment le plus proche d'un point cliqué, pour choisir où insérer. |
+| `spline.ts` | `autoHandles()` calcule des poignées lissées par défaut ; `buildCurveFromNodes()` échantillonne la courbe de Bézier composite à pas régulier et calcule tangente/normale en chaque point. `insertNodeAt`/`removeNodeAt` ajoutent/retirent un nœud sur une liane existante (poignées relissées localement autour du point touché seulement — un nœud « coin » voisin n'est jamais relissé) ; `nearestSegmentIndex` trouve le segment le plus proche d'un point cliqué, pour choisir où insérer. `setNodeCorner()` bascule un nœud lisse/coin, réalignant les poignées en miroir au retour en lisse. |
 | `stem.ts` | Profil d'épaisseur (`widthProfile`, fin aux extrémités) et génération du polygone fermé de la tige (`buildStemPath`). |
 | `brush.ts` | `placeBrush()` : marche le long de la courbe par pas d'arc, calcule position/angle/échelle de chaque instance de motif et lui assigne un `motifId` selon la séquence active. `MotifSequenceEntry` porte l'échelle et le jitter propres à chaque motif — plus de réglage global unique, voir [Séquencer les motifs](../how-to/sequencer-des-motifs.md). |
 | `vine.ts` | Point d'entrée du moteur : `nodesFromStroke`/`nodesFromClicks` (création) et `regenerateVine` (recalcul tige+motifs à partir des nœuds courants — appelé à la création comme à chaque édition). |
@@ -43,7 +43,7 @@ démarrage.
 | --- | --- |
 | `pointerCapture.ts` | Unifie souris/stylet/tactile via la Pointer Events API ; `attachPointerCapture` pour le tracé libre, `attachClickToPlace` pour le mode « Points ». |
 | `renderer.ts` | Gère le DOM SVG : crée/actualise les groupes de liane, résout `motifId → pathD` via `getMotif()`, sérialise l'export. `setMask()` pose/retire un `clip-path` SVG sur le calque des lianes pour le recadrage en direct (l'export, lui, découpe réellement la géométrie — voir `core/junction.ts`). `exportSVG()` regroupe toutes les tiges dans un calque `#layer-stem` et tous les motifs dans `#layer-leaves`, couvrant tout le canevas — pas de groupe par liane comme à l'écran, voir [Exporter pour CNC/laser](../how-to/exporter-pour-cnc-laser.md). |
-| `nodeEditor.ts` | Overlay d'édition (ancres + poignées glissables) pour la liane sélectionnée. |
+| `nodeEditor.ts` | Overlay d'édition (ancres + poignées glissables) pour la liane sélectionnée. Un tap sur une ancre bascule son nœud lisse/coin, différé de `ANCHOR_TAP_DELAY` (config.ts) pour rester distinguable d'un double-clic (qui supprime le nœud) sur le même élément. |
 
 ## `src/assets/`
 

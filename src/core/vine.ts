@@ -1,6 +1,6 @@
 import type { CurveSample, EditableNode, Point } from "./types";
 import { simplifyRDP } from "./simplify";
-import { autoHandles, buildCurveFromNodes, insertNodeAt, removeNodeAt, nearestSegmentIndex } from "./spline";
+import { autoHandles, buildCurveFromNodes, insertNodeAt, removeNodeAt, nearestSegmentIndex, setNodeCorner } from "./spline";
 import { buildStemPolygon, polygonToPath } from "./stem";
 import { placeBrush, type BrushOptions, type BrushPlacement } from "./brush";
 
@@ -31,8 +31,8 @@ export function nodesFromClicks(points: Point[]): EditableNode[] {
   return autoHandles(points);
 }
 
-/** Ajoute/retire un nœud sur une liane existante — voir spline.ts pour le recalcul local des poignées. */
-export { insertNodeAt, removeNodeAt, nearestSegmentIndex };
+/** Ajoute/retire un nœud, ou bascule un nœud lisse/coin, sur une liane existante — voir spline.ts. */
+export { insertNodeAt, removeNodeAt, nearestSegmentIndex, setNodeCorner };
 
 /** Recalcule la tige et les feuilles à partir de l'état courant des nœuds — appelé à la création comme à chaque édition. */
 export function regenerateVine(nodes: EditableNode[], params: VineParams): VineRenderData {
@@ -84,7 +84,12 @@ function isPoint(v: unknown): v is Point {
 function isEditableNode(v: unknown): v is EditableNode {
   if (typeof v !== "object" || v === null) return false;
   const n = v as EditableNode;
-  return isPoint(n.point) && isPoint(n.handleIn) && isPoint(n.handleOut);
+  return (
+    isPoint(n.point) &&
+    isPoint(n.handleIn) &&
+    isPoint(n.handleOut) &&
+    (n.corner === undefined || typeof n.corner === "boolean")
+  );
 }
 
 function isSerializedVine(v: unknown): v is SerializedVine {

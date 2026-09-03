@@ -28,3 +28,8 @@ export const TAP_DRAG_THRESHOLD = 5;
     points" : min = beaucoup de points (suit la main de très près), max = très
     simplifié (peu de points). */
 export const DENSITY_EPSILON_RANGE = { min: 0.5, max: 12 };
+
+/** Délai (ms) avant qu'un tap sur une ancre bascule le nœud lisse/coin — le temps de
+    voir si un second clic arrive et en fait un double-clic (suppression du nœud) à la
+    place, sans quoi les deux gestes se déclencheraient l'un après l'autre. */
+export const ANCHOR_TAP_DELAY = 280;

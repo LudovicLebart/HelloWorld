@@ -60,7 +60,9 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       intersection booléenne à l'export (les motifs hors zone sont omis en entier,
       jamais recoupés partiellement). Voir
       [`docs/how-to/definir-une-zone-de-travail.md`](docs/how-to/definir-une-zone-de-travail.md).
-- [ ] Nœud « coin » (poignées indépendantes, non miroir) en plus du nœud lisse actuel
+- [x] Nœud « coin » (poignées indépendantes, non miroir) en plus du nœud lisse actuel :
+      tap sur une ancre pour basculer (repasser en lisse réaligne les poignées en
+      miroir) — voir [Éditer une liane existante](docs/how-to/editer-une-liane.md)
 - [x] Annuler/refaire (Ctrl+Z / Ctrl+Y, boutons dans la barre d'outils) : instantané
       complet avant chaque action structurelle (création, déplacement de nœud,
       effacement) — les réglages de curseurs ne créent pas d'étape d'annulation

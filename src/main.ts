@@ -10,6 +10,7 @@ import {
   insertNodeAt,
   removeNodeAt,
   nearestSegmentIndex,
+  setNodeCorner,
   type VineParams,
   type CanvasSnapshot,
 } from "./core/vine";
@@ -217,7 +218,19 @@ function selectVine(id: string): void {
     onChange: () => regenerateAndRender(id, liveParams(vine.parentId)),
     onDragEnd: () => saveSnapshot(),
     onRemoveNode: (index) => removeNodeFromVine(id, index),
+    onToggleCorner: (index) => toggleNodeCorner(id, index),
   });
+}
+
+/** Bascule un nœud lisse/coin (tap sur son ancre) et resélectionne pour rafraîchir l'éditeur de nœuds. */
+function toggleNodeCorner(id: string, index: number): void {
+  const vine = vines.get(id);
+  if (!vine) return;
+  pushUndo();
+  vine.nodes = setNodeCorner(vine.nodes, index, !vine.nodes[index].corner);
+  regenerateAndRender(id, liveParams(vine.parentId));
+  selectVine(id);
+  saveSnapshot();
 }
 
 /** Insère un nouveau nœud sur une liane existante (double-clic sur sa tige) et resélectionne pour rafraîchir l'éditeur de nœuds. */

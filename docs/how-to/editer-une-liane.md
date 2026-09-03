@@ -17,10 +17,18 @@ tige et les motifs se recalculent à chaque frame du glisser-déposer.
 
 ## Courber localement
 
-Faites glisser un carré bleu (une poignée). La poignée opposée se déplace en miroir
-pour garder une jonction lisse de part et d'autre du nœud — comme un point « lisse »
-dans Illustrator ou Inkscape. Il n'y a pas encore de point « coin » (poignées
-indépendantes) dans cette version.
+Faites glisser un carré bleu (une poignée). Par défaut le nœud est « lisse » : la
+poignée opposée se déplace en miroir pour garder une jonction lisse de part et
+d'autre du nœud — comme un point lisse dans Illustrator ou Inkscape.
+
+## Nœud lisse ou nœud coin
+
+Tapez (cliquez sans glisser) sur un cercle rouge pour basculer ce nœud entre lisse
+(comportement par défaut, poignées en miroir) et **coin** (poignées indépendantes,
+pour un angle franc dans le squelette) — l'ancre passe de creuse à pleine pour
+signaler qu'il s'agit d'un nœud coin. Repasser un nœud coin en lisse réaligne ses
+poignées en miroir l'une de l'autre, pour que la courbe redevienne effectivement
+lisse à cet endroit.
 
 ## Ajouter ou retirer un point
 
@@ -32,14 +40,13 @@ sens : la suppression est ignorée si la liane n'en a plus que deux).
 
 ## Changer l'habillage d'une seule liane
 
-Les curseurs **Espacement**, **Échelle**, **Jitter**, **Épaisseur tige** et les cases
-à cocher de motifs s'appliquent à la liane actuellement sélectionnée : ajustez-les
-pendant qu'une liane est sélectionnée pour ne modifier qu'elle. Sans sélection, ils ne
-font que définir les réglages du **prochain** tracé.
+Le curseur **Espacement**, le curseur **Épaisseur tige** et le panneau **Motifs**
+(ordre, échelle, jitter par motif — voir [Séquencer les motifs](sequencer-des-motifs.md))
+s'appliquent à la liane actuellement sélectionnée : ajustez-les pendant qu'une liane
+est sélectionnée pour ne modifier qu'elle. Sans sélection, ils ne font que définir les
+réglages du **prochain** tracé.
 
 ## Limites actuelles
 
-- Pas encore de point « coin » (poignées indépendantes, non miroir).
-- La racine d'une branche n'est pas re-accrochée automatiquement si vous éditez
-  ensuite les nœuds de la liane parente — voir
-  [Créer une branche](creer-une-branche.md).
+La racine d'une branche n'est pas re-accrochée automatiquement si vous éditez ensuite
+les nœuds de la liane parente — voir [Créer une branche](creer-une-branche.md).

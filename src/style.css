@@ -267,3 +267,9 @@ button:disabled {
   stroke-width: 2;
   cursor: move;
 }
+
+/* Nœud « coin » (poignées indépendantes, pas de miroir) : ancre pleine plutôt
+   que creuse, pour le distinguer d'un coup d'œil d'un nœud lisse. */
+#node-editor .node-anchor-corner {
+  fill: #d1573b;
+}

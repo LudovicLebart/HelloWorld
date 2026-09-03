@@ -33,15 +33,15 @@ export function autoHandles(points: Point[], smoothing = 0.25): EditableNode[] {
   });
 }
 
-/** Ré-applique des poignées lissées aux nœuds `center-1..center+1` (clampé aux bornes) — les autres nœuds ne sont pas touchés. */
+/** Ré-applique des poignées lissées aux nœuds `center-1..center+1` (clampé aux bornes) — les autres nœuds ne sont pas touchés, ni un nœud « coin » (poignées volontairement indépendantes, voir EditableNode.corner). */
 function resmoothAround(nodes: EditableNode[], center: number, smoothing: number): EditableNode[] {
   const result = [...nodes];
   for (const i of [center - 1, center, center + 1]) {
-    if (i < 0 || i >= result.length) continue;
+    if (i < 0 || i >= result.length || result[i].corner) continue;
     const prev = result[Math.max(0, i - 1)].point;
     const next = result[Math.min(result.length - 1, i + 1)].point;
     const p = result[i].point;
-    result[i] = { point: p, ...smoothedHandles(prev, p, next, smoothing) };
+    result[i] = { ...result[i], ...smoothedHandles(prev, p, next, smoothing) };
   }
   return result;
 }
@@ -84,6 +84,26 @@ export function insertNodeAt(nodes: EditableNode[], index: number, smoothing = 0
 export function removeNodeAt(nodes: EditableNode[], index: number, smoothing = 0.25): EditableNode[] {
   const result = nodes.filter((_, i) => i !== index);
   return resmoothAround(result, index, smoothing);
+}
+
+/**
+ * Bascule le nœud `index` entre lisse (poignées en miroir, comportement par
+ * défaut) et coin (poignées indépendantes, pour un angle franc). Passer en
+ * coin ne change aucune géométrie (les poignées restent où elles sont, seul
+ * leur comportement au glisser-déposer change) ; repasser en lisse aligne
+ * `handleOut` en miroir de `handleIn` à travers le point, pour que la courbe
+ * redevienne effectivement lisse, pas seulement étiquetée comme telle.
+ */
+export function setNodeCorner(nodes: EditableNode[], index: number, corner: boolean): EditableNode[] {
+  const result = [...nodes];
+  const n = result[index];
+  if (corner) {
+    result[index] = { ...n, corner: true };
+  } else {
+    const handleOut = { x: 2 * n.point.x - n.handleIn.x, y: 2 * n.point.y - n.handleIn.y };
+    result[index] = { ...n, corner: false, handleOut };
+  }
+  return result;
 }
 
 export function bezierPoint(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {

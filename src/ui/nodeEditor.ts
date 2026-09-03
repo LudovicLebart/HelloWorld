@@ -1,5 +1,6 @@
 import type { EditableNode, Point } from "../core/types";
 import { svgPointFromEvent } from "./pointerCapture";
+import { ANCHOR_TAP_DELAY } from "../config";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -34,6 +35,8 @@ export interface NodeEditorCallbacks {
   onDragEnd?: () => void;
   /** Double-clic sur une ancre : demande la suppression de ce nœud. */
   onRemoveNode?: (index: number) => void;
+  /** Tap (pointerdown+up sans glisser) sur une ancre : bascule ce nœud lisse/coin. */
+  onToggleCorner?: (index: number) => void;
 }
 
 export class NodeEditor {
@@ -91,6 +94,7 @@ export class NodeEditor {
       this.setHandlePos(el.handleOut, node.handleOut);
       el.anchor.setAttribute("cx", String(node.point.x));
       el.anchor.setAttribute("cy", String(node.point.y));
+      el.anchor.classList.toggle("node-anchor-corner", !!node.corner);
     });
   }
 
@@ -111,17 +115,41 @@ export class NodeEditor {
     const circle = document.createElementNS(SVG_NS, "circle");
     circle.setAttribute("class", "node-anchor");
     circle.setAttribute("r", "6");
-    this.attachDrag(circle, (delta) => {
-      const n = this.nodes[index];
-      n.point.x += delta.x;
-      n.point.y += delta.y;
-      n.handleIn.x += delta.x;
-      n.handleIn.y += delta.y;
-      n.handleOut.x += delta.x;
-      n.handleOut.y += delta.y;
-    });
+
+    // Un tap et le premier clic d'un double-clic sont indiscernables au moment où ils
+    // arrivent : la bascule lisse/coin est différée le temps de voir si un second clic
+    // (donc un double-clic, qui supprime le nœud à la place) suit dans la foulée.
+    let pendingToggle: ReturnType<typeof setTimeout> | null = null;
+
+    this.attachDrag(
+      circle,
+      (delta) => {
+        const n = this.nodes[index];
+        n.point.x += delta.x;
+        n.point.y += delta.y;
+        n.handleIn.x += delta.x;
+        n.handleIn.y += delta.y;
+        n.handleOut.x += delta.x;
+        n.handleOut.y += delta.y;
+      },
+      () => {
+        // Comme dans attachDrag : si une autre interaction reconstruit l'overlay avant que
+        // ce délai n'expire (ex. suppression d'un autre nœud entre-temps), `index` ne
+        // désignerait plus le bon nœud dans le nouveau tableau — on abandonne proprement.
+        const nodesAtTapStart = this.nodes;
+        pendingToggle = setTimeout(() => {
+          pendingToggle = null;
+          if (this.nodes !== nodesAtTapStart) return;
+          this.callbacks?.onToggleCorner?.(index);
+        }, ANCHOR_TAP_DELAY);
+      },
+    );
     circle.addEventListener("dblclick", (e: MouseEvent) => {
       e.stopPropagation();
+      if (pendingToggle !== null) {
+        clearTimeout(pendingToggle);
+        pendingToggle = null;
+      }
       this.callbacks?.onRemoveNode?.(index);
     });
     return circle;
@@ -137,6 +165,8 @@ export class NodeEditor {
       const h = n[which];
       h.x += delta.x;
       h.y += delta.y;
+      // Nœud « coin » : les poignées sont volontairement indépendantes, pas de miroir.
+      if (n.corner) return;
       const mirror = which === "handleIn" ? n.handleOut : n.handleIn;
       mirror.x = n.point.x - (h.x - n.point.x);
       mirror.y = n.point.y - (h.y - n.point.y);
@@ -150,7 +180,8 @@ export class NodeEditor {
     rect.setAttribute("y", String(p.y - s));
   }
 
-  private attachDrag(el: SVGGraphicsElement, applyDelta: (delta: Point) => void): void {
+  /** `onTap`, si fourni, se déclenche pour un pointerdown+up sans glisser (un simple clic/tap) — libre jusqu'ici, puisque `applyDelta` n'est alors jamais appelé. */
+  private attachDrag(el: SVGGraphicsElement, applyDelta: (delta: Point) => void, onTap?: () => void): void {
     el.addEventListener("pointerdown", (e: PointerEvent) => {
       e.stopPropagation();
       el.setPointerCapture(e.pointerId);
@@ -179,7 +210,9 @@ export class NodeEditor {
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
         el.removeEventListener("pointercancel", onUp);
-        if (moved && this.nodes === nodesAtDragStart) this.callbacks?.onDragEnd?.();
+        if (this.nodes !== nodesAtDragStart) return;
+        if (moved) this.callbacks?.onDragEnd?.();
+        else onTap?.();
       };
 
       el.addEventListener("pointermove", onMove);
