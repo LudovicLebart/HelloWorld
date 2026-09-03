@@ -49,8 +49,9 @@ démarrage.
 
 | Fichier | Rôle |
 | --- | --- |
-| `leaf.ts`, `flower.ts`, `volute.ts` | Un `pathD` unitaire chacun (origine = point d'attache, extension vers `+x`). |
-| `motifs.ts` | Registre `MOTIFS` et `getMotif(id)` — seul point de couplage entre un `motifId` et son rendu. |
+| `leaf.ts`, `flower.ts`, `volute.ts` | Un `pathD` unitaire chacun (origine = point d'attache, extension vers `+x`) — motifs « internes », silhouettes calculées par code. |
+| `motifs/*.svg` | Motifs « externes » : un fichier `.svg` par motif, chargé au build via `import.meta.glob` — voir [Ajouter un nouveau motif](../how-to/ajouter-un-motif.md). Aucune modification de code nécessaire pour en ajouter un. |
+| `motifs.ts` | Registre `MOTIFS` (motifs internes + tous les `.svg` de `motifs/`) et `getMotif(id)` — seul point de couplage entre un `motifId` et son rendu (`pathD`, couleur, `scaleFactor`). |
 
 ## Flux de données
 

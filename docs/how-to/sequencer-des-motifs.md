@@ -2,7 +2,9 @@
 
 ## Réordonner la séquence
 
-Chaque motif (Feuille, Volute, Fleur) a sa propre rangée dans le panneau **Motifs**.
+Chaque motif (Feuille, Volute, Fleur, et tout motif ajouté — voir
+[Ajouter un nouveau motif](ajouter-un-motif.md)) a sa propre rangée dans le panneau
+**Motifs**.
 Les flèches **↑** / **↓** déplacent une rangée dans la liste ; l'ordre affiché est
 l'ordre dans lequel les motifs alternent le long de la tige, en boucle (par exemple
 Volute → Feuille → Volute → Feuille... si seuls ces deux-là sont actifs). La flèche du

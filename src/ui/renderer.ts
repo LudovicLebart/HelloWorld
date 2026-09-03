@@ -25,8 +25,12 @@ export interface ExportCluster {
 function createLeafElement(leaf: BrushPlacement): SVGPathElement {
   const motif = getMotif(leaf.motifId);
   const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("class", `motif-instance ${motif.className}`);
+  path.setAttribute("class", `motif-instance ${motif.className ?? ""}`.trim());
   path.setAttribute("d", motif.pathD);
+  // Un motif interne résout sa couleur via sa classe CSS (voir style.css) ; un motif
+  // chargé depuis un .svg externe n'a pas de règle dédiée, sa couleur est portée
+  // directement par le motif (voir assets/motifs.ts).
+  if (motif.fill) path.setAttribute("fill", motif.fill);
   const deg = (leaf.angle * 180) / Math.PI;
   const scale = leaf.scale * motif.scaleFactor;
   path.setAttribute("transform", `translate(${leaf.position.x},${leaf.position.y}) rotate(${deg}) scale(${scale})`);

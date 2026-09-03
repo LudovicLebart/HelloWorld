@@ -21,6 +21,7 @@ import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
 import { Renderer, type ExportCluster } from "./ui/renderer";
 import { NodeEditor } from "./ui/nodeEditor";
 import { STORAGE_KEY, UNDO_LIMIT, BRANCH_SNAP_RADIUS, DENSITY_EPSILON_RANGE } from "./config";
+import { MOTIFS } from "./assets/motifs";
 
 const svg = document.querySelector<SVGSVGElement>("#canvas")!;
 const renderer = new Renderer(svg);
@@ -45,6 +46,62 @@ const motifListEl = document.querySelector<HTMLOListElement>("#motif-list")!;
 /** Une rangée de la séquence de motifs — voir index.html (#motif-list). */
 function motifRows(): HTMLLIElement[] {
   return [...motifListEl.querySelectorAll<HTMLLIElement>(".motif-row")];
+}
+
+/** Construit la rangée d'un motif (voir style.css .motif-row) : ordre, activation, échelle, jitter — un seul gabarit pour les motifs internes comme pour ceux chargés depuis un .svg externe (assets/motifs.ts). */
+function buildMotifRow(motif: (typeof MOTIFS)[number]): HTMLLIElement {
+  const li = document.createElement("li");
+  li.className = "motif-row";
+  li.dataset.motif = motif.id;
+
+  const order = document.createElement("div");
+  order.className = "motif-order";
+  const up = document.createElement("button");
+  up.type = "button";
+  up.className = "motif-up";
+  up.setAttribute("aria-label", "Monter");
+  up.textContent = "↑";
+  const down = document.createElement("button");
+  down.type = "button";
+  down.className = "motif-down";
+  down.setAttribute("aria-label", "Descendre");
+  down.textContent = "↓";
+  order.append(up, down);
+
+  const activeLabel = document.createElement("label");
+  activeLabel.className = "checkbox";
+  const active = document.createElement("input");
+  active.type = "checkbox";
+  active.className = "motif-active";
+  active.checked = true;
+  activeLabel.append(active, document.createTextNode(` ${motif.label}`));
+
+  const scaleLabel = document.createElement("label");
+  const scale = document.createElement("input");
+  scale.type = "range";
+  scale.className = "motif-scale";
+  scale.min = "4";
+  scale.max = "40";
+  scale.step = "1";
+  scale.value = String(motif.defaultScale);
+  scaleLabel.append("Échelle", scale);
+
+  const jitterLabel = document.createElement("label");
+  const jitter = document.createElement("input");
+  jitter.type = "range";
+  jitter.className = "motif-jitter";
+  jitter.min = "0";
+  jitter.max = "100";
+  jitter.step = "1";
+  jitter.value = "20";
+  jitterLabel.append("Jitter", jitter);
+
+  li.append(order, activeLabel, scaleLabel, jitterLabel);
+  return li;
+}
+
+for (const motif of MOTIFS) {
+  motifListEl.appendChild(buildMotifRow(motif));
 }
 
 type Mode = "freehand" | "points" | "mask";

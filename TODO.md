@@ -27,9 +27,11 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 - [x] Échelle dégressive vers les extrémités de la liane
 - [x] Angle variable par rapport à la tangente de la tige
 - [x] Espacement réglable
-- [ ] Charger de vrais fichiers `.svg` externes comme motifs, plutôt que des
-      silhouettes générées en interne (`src/assets/*.ts`) — nécessaire pour que
-      quelqu'un d'autre que le développeur puisse ajouter un motif sans toucher au code
+- [x] Charger de vrais fichiers `.svg` externes comme motifs, plutôt que des
+      silhouettes générées en interne (`src/assets/*.ts`) — tout `.svg` déposé dans
+      `src/assets/motifs/` est chargé au build (`import.meta.glob`) et devient un
+      motif disponible, aucun code à toucher. Voir
+      [Ajouter un nouveau motif](docs/how-to/ajouter-un-motif.md)
 - [x] Séquence personnalisable par l'utilisateur : flèches ↑/↓ par motif dans
       `#motif-list`, l'ordre du DOM fait foi (pas de tableau séparé à synchroniser) —
       voir [Séquencer les motifs](docs/how-to/sequencer-des-motifs.md)

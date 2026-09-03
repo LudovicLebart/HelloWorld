@@ -21,35 +21,9 @@
           <button id="clear-mask">Effacer le masque</button>
           <fieldset class="motif-sequence">
             <legend>Motifs (ordre, échelle, jitter)</legend>
-            <ol id="motif-list">
-              <li class="motif-row" data-motif="leaf">
-                <div class="motif-order">
-                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
-                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
-                </div>
-                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Feuille</label>
-                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="16" step="1" /></label>
-                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
-              </li>
-              <li class="motif-row" data-motif="volute">
-                <div class="motif-order">
-                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
-                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
-                </div>
-                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Volute</label>
-                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="14" step="1" /></label>
-                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
-              </li>
-              <li class="motif-row" data-motif="flower">
-                <div class="motif-order">
-                  <button type="button" class="motif-up" aria-label="Monter">↑</button>
-                  <button type="button" class="motif-down" aria-label="Descendre">↓</button>
-                </div>
-                <label class="checkbox"><input type="checkbox" class="motif-active" checked /> Fleur</label>
-                <label>Échelle<input type="range" class="motif-scale" min="4" max="40" value="18" step="1" /></label>
-                <label>Jitter<input type="range" class="motif-jitter" min="0" max="100" value="20" step="1" /></label>
-              </li>
-            </ol>
+            <!-- Rempli dynamiquement par main.ts à partir du registre assets/motifs.ts (motifs
+                 internes + tout .svg déposé dans assets/motifs/) — voir docs/how-to/ajouter-un-motif.md. -->
+            <ol id="motif-list"></ol>
           </fieldset>
           <label>
             Densité des points
