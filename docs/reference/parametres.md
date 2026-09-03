@@ -2,8 +2,10 @@
 
 | Contrôle | Élément | Plage | Effet |
 | --- | --- | --- | --- |
-| Libre / Points | `#mode-freehand` / `#mode-points` | — | Mode de création d'une nouvelle liane : tracé continu au pointeur, ou pose de nœuds un par un. |
+| Libre / Points / Masque | `#mode-freehand` / `#mode-points` / `#mode-mask` | — | Mode de création : tracé continu au pointeur, pose de nœuds un par un, ou définition de la zone de travail — voir [Définir une zone de travail](../how-to/definir-une-zone-de-travail.md). |
 | Terminer le tracé | `#finish-points` | — | Visible seulement en mode Points ; finalise la liane en cours (équivalent à un double-clic). |
+| Terminer le masque | `#finish-mask` | — | Visible seulement en mode Masque ; valide la zone de travail (au moins 3 points posés). |
+| Effacer le masque | `#clear-mask` | — | Retire la zone de travail définie, indépendamment du bouton Effacer (qui n'efface que les lianes). |
 | Motifs (Feuille/Volute/Fleur) | `#motif-leaf`/`#motif-volute`/`#motif-flower` | on/off | Motifs actifs dans la séquence qui se répète le long de la tige. Au moins un motif reste actif — si tous sont décochés, la feuille redevient le motif par défaut. |
 | Densité des points | `#density` | 0–100 | Épsilon de simplification RDP appliqué aux tracés à main levée : 0 = très simplifié (peu de points, `epsilon = 12px`), 100 = suit la main de près (`epsilon = 0.5px`). Sans effet en mode Points, où chaque clic est un nœud. |
 | Espacement | `#spacing` | 8–60 px | Distance moyenne en longueur d'arc entre deux instances de motif consécutives. |

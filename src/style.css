@@ -72,7 +72,8 @@ button {
   cursor: pointer;
 }
 
-button#clear {
+button#clear,
+button#clear-mask {
   background: transparent;
   color: var(--accent);
 }
@@ -122,9 +123,18 @@ button:disabled {
   color: #fff;
 }
 
-#finish-points {
+#finish-points,
+#finish-mask {
   background: #3d5a2c;
   border-color: #3d5a2c;
+}
+
+.mask-outline {
+  fill: rgba(122, 82, 48, 0.05);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  pointer-events: none;
 }
 
 #canvas-wrap {

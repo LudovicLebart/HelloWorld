@@ -23,14 +23,16 @@ src/
 | `stem.ts` | Profil d'épaisseur (`widthProfile`, fin aux extrémités) et génération du polygone fermé de la tige (`buildStemPath`). |
 | `brush.ts` | `placeBrush()` : marche le long de la courbe par pas d'arc, calcule position/angle/échelle de chaque instance de motif et lui assigne un `motifId` selon la séquence active. |
 | `vine.ts` | Point d'entrée du moteur : `nodesFromStroke`/`nodesFromClicks` (création) et `regenerateVine` (recalcul tige+motifs à partir des nœuds courants — appelé à la création comme à chaque édition). |
-| `junction.ts` | `unionStemPolygons()` : fusionne par opération booléenne (bibliothèque `polygon-clipping`) les polygones de tige d'une liane et de ses branches en un seul contour, pour l'export — voir [Créer une branche](../how-to/creer-une-branche.md). |
+| `junction.ts` | `unionStemPolygons()` : fusionne par opération booléenne (bibliothèque `polygon-clipping`) les polygones de tige d'une liane et de ses branches en un seul contour, pour l'export — voir [Créer une branche](../how-to/creer-une-branche.md). Découpe aussi ce contour par intersection avec un masque optionnel (zone de travail — voir `mask.ts`). |
+| `mask.ts` | `isPointInMask()` : test point-dans-polygone (lancer de rayon), utilisé à l'export pour ne garder que les motifs dont l'attache tombe dans la zone de travail — voir [Définir une zone de travail](../how-to/definir-une-zone-de-travail.md). |
 | `history.ts` | `SnapshotHistory` : pile annuler/rétablir générique par instantanés (chaînes opaques) — aucune connaissance des lianes. |
 | `persistence.ts` | `saveToStorage`/`loadFromStorage` : accès `localStorage` générique (clé + chaîne), toujours défensif (stockage indisponible = non fatal). |
 
-`vine.ts` porte aussi `SerializedVine` et `serializeVines`/`deserializeVines` — la forme
-persistable d'une liane (nœuds, liane parente, params) et sa validation : une donnée
-corrompue ou de forme incompatible est écartée (`null`) avant d'atteindre le pipeline de
-régénération, pour qu'un instantané invalide ne puisse jamais bloquer le démarrage.
+`vine.ts` porte aussi `SerializedVine`/`CanvasSnapshot` et `serializeCanvas`/`deserializeCanvas`
+— la forme persistable de tout le canevas (lianes et zone de travail) et sa validation :
+une donnée corrompue ou de forme incompatible est écartée (`null`) avant d'atteindre le
+pipeline de régénération, pour qu'un instantané invalide ne puisse jamais bloquer le
+démarrage.
 
 `core/` ne connaît que des chaînes `motifId` — jamais de `pathD` SVG ni de couleur, voir
 [Ajouter un nouveau motif](../how-to/ajouter-un-motif.md).
@@ -40,7 +42,7 @@ régénération, pour qu'un instantané invalide ne puisse jamais bloquer le dé
 | Fichier | Rôle |
 | --- | --- |
 | `pointerCapture.ts` | Unifie souris/stylet/tactile via la Pointer Events API ; `attachPointerCapture` pour le tracé libre, `attachClickToPlace` pour le mode « Points ». |
-| `renderer.ts` | Gère le DOM SVG : crée/actualise les groupes de liane, résout `motifId → pathD` via `getMotif()`, sérialise l'export. |
+| `renderer.ts` | Gère le DOM SVG : crée/actualise les groupes de liane, résout `motifId → pathD` via `getMotif()`, sérialise l'export. `setMask()` pose/retire un `clip-path` SVG sur le calque des lianes pour le recadrage en direct (l'export, lui, découpe réellement la géométrie — voir `core/junction.ts`). |
 | `nodeEditor.ts` | Overlay d'édition (ancres + poignées glissables) pour la liane sélectionnée. |
 
 ## `src/assets/`

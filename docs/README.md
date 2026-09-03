@@ -21,7 +21,8 @@ entre deux quadrants, c'est qu'elle devrait être scindée.
 - Guides pratiques : [Exporter pour CNC/laser](how-to/exporter-pour-cnc-laser.md) ·
   [Éditer une liane existante](how-to/editer-une-liane.md) ·
   [Créer une branche (jonction en Y)](how-to/creer-une-branche.md) ·
-  [Ajouter un nouveau motif](how-to/ajouter-un-motif.md)
+  [Ajouter un nouveau motif](how-to/ajouter-un-motif.md) ·
+  [Définir une zone de travail (masque)](how-to/definir-une-zone-de-travail.md)
 - Référence : [Architecture des modules](reference/architecture.md) ·
   [Paramètres de l'interface](reference/parametres.md)
 - Explications : [Le modèle procédural](explanation/modele-procedural.md) ·

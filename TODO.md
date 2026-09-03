@@ -46,8 +46,12 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       jonction. Voir [`docs/how-to/creer-une-branche.md`](docs/how-to/creer-une-branche.md).
       Limite connue : la racine d'une branche n'est pas re-accrochée
       automatiquement si on édite ensuite les nœuds de la liane parente.
-- [ ] Masques d'écrêtage : définir une zone de travail (ex. la forme d'un pickguard)
-      pour que les lianes ne dépassent jamais de la zone délimitée
+- [x] Masques d'écrêtage : définir une zone de travail (ex. la forme d'un pickguard)
+      pour que les lianes ne dépassent jamais de la zone délimitée — mode « Masque »,
+      recadrage en direct par `clip-path` SVG à l'écran, découpe réelle par
+      intersection booléenne à l'export (les motifs hors zone sont omis en entier,
+      jamais recoupés partiellement). Voir
+      [`docs/how-to/definir-une-zone-de-travail.md`](docs/how-to/definir-une-zone-de-travail.md).
 - [ ] Nœud « coin » (poignées indépendantes, non miroir) en plus du nœud lisse actuel
 - [x] Annuler/refaire (Ctrl+Z / Ctrl+Y, boutons dans la barre d'outils) : instantané
       complet avant chaque action structurelle (création, déplacement de nœud,

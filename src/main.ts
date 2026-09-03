@@ -5,14 +5,16 @@ import {
   nodesFromStroke,
   nodesFromClicks,
   regenerateVine,
-  serializeVines,
-  deserializeVines,
+  serializeCanvas,
+  deserializeCanvas,
   insertNodeAt,
   removeNodeAt,
   nearestSegmentIndex,
   type VineParams,
+  type CanvasSnapshot,
 } from "./core/vine";
 import { unionStemPolygons } from "./core/junction";
+import { isPointInMask } from "./core/mask";
 import { SnapshotHistory } from "./core/history";
 import { saveToStorage as persistSnapshot, loadFromStorage as readPersistedSnapshot } from "./core/persistence";
 import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
@@ -36,14 +38,17 @@ const undoButton = document.querySelector<HTMLButtonElement>("#undo")!;
 const redoButton = document.querySelector<HTMLButtonElement>("#redo")!;
 const modeFreehandButton = document.querySelector<HTMLButtonElement>("#mode-freehand")!;
 const modePointsButton = document.querySelector<HTMLButtonElement>("#mode-points")!;
+const modeMaskButton = document.querySelector<HTMLButtonElement>("#mode-mask")!;
 const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")!;
+const finishMaskButton = document.querySelector<HTMLButtonElement>("#finish-mask")!;
+const clearMaskButton = document.querySelector<HTMLButtonElement>("#clear-mask")!;
 const motifCheckboxes = {
   leaf: document.querySelector<HTMLInputElement>("#motif-leaf")!,
   volute: document.querySelector<HTMLInputElement>("#motif-volute")!,
   flower: document.querySelector<HTMLInputElement>("#motif-flower")!,
 };
 
-type Mode = "freehand" | "points";
+type Mode = "freehand" | "points" | "mask";
 
 interface VineState {
   nodes: EditableNode[];
@@ -64,6 +69,10 @@ let pendingParentId: string | null = null;
 let pendingSnapPoint: Point | null = null;
 let detachInteraction: () => void = () => {};
 let nextVineId = 1;
+
+/** Zone de travail définie par l'utilisateur (mode Masque) — les lianes affichées et exportées ne dépassent jamais de ce contour, voir mask.ts et junction.ts. */
+let mask: Point[] | null = null;
+let pendingMaskPoints: Point[] = [];
 
 function newVineId(): string {
   return `vine-${nextVineId++}`;
@@ -220,12 +229,15 @@ function setMode(next: Mode): void {
   pendingClickPoints = [];
   pendingParentId = null;
   pendingSnapPoint = null;
+  pendingMaskPoints = [];
   renderer.setLiveStroke(null);
   deselect();
 
   modeFreehandButton.classList.toggle("active", next === "freehand");
   modePointsButton.classList.toggle("active", next === "points");
+  modeMaskButton.classList.toggle("active", next === "mask");
   finishButton.hidden = next !== "points";
+  finishMaskButton.hidden = next !== "mask";
 
   if (next === "freehand") {
     detachInteraction = attachPointerCapture(svg, {
@@ -246,7 +258,7 @@ function setMode(next: Mode): void {
         pendingSnapPoint = null;
       },
     });
-  } else {
+  } else if (next === "points") {
     detachInteraction = attachClickToPlace(svg, {
       onAdd: (p) => {
         if (selectedId) deselect();
@@ -262,13 +274,53 @@ function setMode(next: Mode): void {
         if (pendingClickPoints.length >= 2) finishPointsVine();
       },
     });
+  } else {
+    detachInteraction = attachClickToPlace(svg, {
+      onAdd: (p) => {
+        pendingMaskPoints.push(p);
+        renderer.setLiveStroke(pendingMaskPoints);
+      },
+      onFinish: () => {
+        if (pendingMaskPoints.length >= 3) finishMask();
+      },
+    });
   }
+}
+
+/** Termine le tracé du masque (au moins 3 points) et l'applique comme nouvelle zone de travail. */
+function finishMask(): void {
+  // Même garde qu'un tracé de liane : un double-clic ajoute aussi un point juste avant,
+  // sur la même position — on retire ce doublon dégénéré.
+  if (pendingMaskPoints.length >= 2) {
+    const a = pendingMaskPoints[pendingMaskPoints.length - 1];
+    const b = pendingMaskPoints[pendingMaskPoints.length - 2];
+    if (Math.hypot(a.x - b.x, a.y - b.y) < 3) pendingMaskPoints.pop();
+  }
+  if (pendingMaskPoints.length < 3) return;
+  pushUndo();
+  mask = pendingMaskPoints;
+  pendingMaskPoints = [];
+  renderer.setLiveStroke(null);
+  renderer.setMask(mask);
+  saveSnapshot();
+  setMode("freehand");
 }
 
 modeFreehandButton.addEventListener("click", () => setMode("freehand"));
 modePointsButton.addEventListener("click", () => setMode("points"));
+modeMaskButton.addEventListener("click", () => setMode("mask"));
 finishButton.addEventListener("click", () => {
   if (pendingClickPoints.length >= 2) finishPointsVine();
+});
+finishMaskButton.addEventListener("click", () => {
+  if (pendingMaskPoints.length >= 3) finishMask();
+});
+clearMaskButton.addEventListener("click", () => {
+  if (!mask) return;
+  pushUndo();
+  mask = null;
+  renderer.setMask(null);
+  saveSnapshot();
 });
 
 // Ajuster un curseur ou une case à cocher met à jour la liane sélectionnée en direct
@@ -326,8 +378,10 @@ function buildExportClusters(): ExportCluster[] {
 
   return [...grouped.values()].map((ids) => {
     const polygons = ids.map((id) => vines.get(id)!.stemPolygon);
-    const leafGroups = ids.map((id) => vines.get(id)!.leaves);
-    return { stemPathD: unionStemPolygons(polygons), leafGroups };
+    const leafGroups = ids.map((id) =>
+      mask ? vines.get(id)!.leaves.filter((leaf) => isPointInMask(leaf.position, mask!)) : vines.get(id)!.leaves,
+    );
+    return { stemPathD: unionStemPolygons(polygons, mask), leafGroups };
   });
 }
 
@@ -344,21 +398,23 @@ exportButton.addEventListener("click", () => {
 
 // --- Annuler/rétablir + sauvegarde locale ------------------------------
 
-/** Reconstruit tout le canevas à partir d'un instantané validé — nœuds ET params historiques, jamais les curseurs actuels (voir regenerateAndRender). */
-function loadVines(list: ReturnType<typeof deserializeVines>): void {
-  if (!list) return;
+/** Reconstruit tout le canevas (lianes ET masque) à partir d'un instantané validé — nœuds/params historiques, jamais les curseurs actuels (voir regenerateAndRender). */
+function loadVines(canvas: CanvasSnapshot | null): void {
+  if (!canvas) return;
   renderer.clear();
   vines.clear();
   deselect();
-  for (const v of list) {
+  for (const v of canvas.vines) {
     wireVine(v.id);
     vines.set(v.id, { nodes: v.nodes, parentId: v.parentId, params: v.params, curve: [], stemPolygon: [], leaves: [] });
     regenerateAndRender(v.id, v.params);
   }
+  mask = canvas.mask;
+  renderer.setMask(mask);
 }
 
 function snapshot(): string {
-  return serializeVines(vines);
+  return serializeCanvas(vines, mask);
 }
 
 function updateUndoRedoButtons(): void {
@@ -375,7 +431,7 @@ function pushUndo(): void {
 function undo(): void {
   const prev = history.undo(snapshot());
   if (!prev) return;
-  loadVines(deserializeVines(prev));
+  loadVines(deserializeCanvas(prev));
   saveSnapshot();
   updateUndoRedoButtons();
 }
@@ -383,7 +439,7 @@ function undo(): void {
 function redo(): void {
   const next = history.redo(snapshot());
   if (!next) return;
-  loadVines(deserializeVines(next));
+  loadVines(deserializeCanvas(next));
   saveSnapshot();
   updateUndoRedoButtons();
 }
@@ -410,14 +466,15 @@ window.addEventListener("keydown", (e) => {
 // on protège aussi contre un échec plus tardif dans la régénération (nœuds valides en
 // forme mais géométriquement dégénérés, etc.) pour ne jamais empêcher setMode() de
 // s'exécuter — sans quoi l'app démarrerait avec le tracé non câblé, inutilisable.
-const restored = deserializeVines(readPersistedSnapshot(STORAGE_KEY) ?? "");
-if (restored && restored.length > 0) {
+const restored = deserializeCanvas(readPersistedSnapshot(STORAGE_KEY) ?? "");
+if (restored && (restored.vines.length > 0 || restored.mask)) {
   try {
     loadVines(restored);
-    nextVineId = restored.reduce((max, v) => Math.max(max, Number(v.id.split("-")[1]) || 0), 0) + 1;
+    nextVineId = restored.vines.reduce((max, v) => Math.max(max, Number(v.id.split("-")[1]) || 0), 0) + 1;
   } catch {
     renderer.clear();
     vines.clear();
+    mask = null;
   }
 }
 updateUndoRedoButtons();

@@ -15,14 +15,28 @@ function toRing(points: Point[]): [number, number][] {
  * ce qui rend une découpe CNC/Laser propre plutôt que deux tracés qui se
  * recouvrent. Rendu ici en un unique `d` (un sous-chemin par polygone
  * résultant ; en pratique un seul si les tiges se touchent vraiment).
+ *
+ * Si `mask` est fourni (zone de travail définie par l'utilisateur — voir
+ * docs/how-to/definir-une-zone-de-travail.md), le contour fusionné est en
+ * plus découpé par intersection booléenne avec le masque : le tracé exporté
+ * ne dépasse jamais de la zone, sans recourir à un `clip-path` SVG (que les
+ * logiciels de découpe CNC/laser ne savent pas tous interpréter).
  */
-export function unionStemPolygons(polygons: Point[][]): string {
+export function unionStemPolygons(polygons: Point[][], mask?: Point[] | null): string {
   const nonEmpty = polygons.filter((p) => p.length >= 3);
   if (nonEmpty.length === 0) return "";
-  if (nonEmpty.length === 1) return polygonToPath(nonEmpty[0]);
 
-  const [first, ...rest] = nonEmpty.map((p) => [toRing(p)]);
-  const merged = polygonClipping.union(first, ...rest);
+  let merged: ReturnType<typeof polygonClipping.union>;
+  if (nonEmpty.length === 1) {
+    merged = [[toRing(nonEmpty[0])]];
+  } else {
+    const [first, ...rest] = nonEmpty.map((p) => [toRing(p)]);
+    merged = polygonClipping.union(first, ...rest);
+  }
+
+  if (mask && mask.length >= 3) {
+    merged = polygonClipping.intersection(merged, [toRing(mask)]);
+  }
 
   return merged
     .map((polygon) => polygon.map((ring) => polygonToPath(ring.map(([x, y]) => ({ x, y })))).join(" "))

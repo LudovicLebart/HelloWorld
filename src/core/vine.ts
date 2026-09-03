@@ -57,9 +57,16 @@ export interface SerializedVine {
   params: VineParams;
 }
 
-/** Sérialise un ensemble de lianes (undo/redo comme sauvegarde locale utilisent le même format). */
-export function serializeVines(
+/** Forme persistable de tout le canevas : les lianes, et la zone de travail (masque) éventuelle — voir mask.ts. */
+export interface CanvasSnapshot {
+  vines: SerializedVine[];
+  mask: Point[] | null;
+}
+
+/** Sérialise tout le canevas (undo/redo comme sauvegarde locale utilisent le même format). */
+export function serializeCanvas(
   vines: Map<string, { nodes: EditableNode[]; parentId?: string; params: VineParams }>,
+  mask: Point[] | null,
 ): string {
   const list: SerializedVine[] = [...vines].map(([id, v]) => ({
     id,
@@ -67,7 +74,7 @@ export function serializeVines(
     parentId: v.parentId,
     params: v.params,
   }));
-  return JSON.stringify(list);
+  return JSON.stringify({ vines: list, mask });
 }
 
 function isPoint(v: unknown): v is Point {
@@ -93,6 +100,16 @@ function isSerializedVine(v: unknown): v is SerializedVine {
   );
 }
 
+function isMask(v: unknown): v is Point[] | null {
+  return v === null || (Array.isArray(v) && v.every(isPoint));
+}
+
+function isCanvasSnapshot(v: unknown): v is CanvasSnapshot {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return Array.isArray(o.vines) && o.vines.every(isSerializedVine) && isMask(o.mask);
+}
+
 /**
  * Désérialise un instantané en validant sa forme — une chaîne corrompue,
  * vide ou d'un format incompatible (schéma antérieur, donnée altérée) donne
@@ -100,10 +117,10 @@ function isSerializedVine(v: unknown): v is SerializedVine {
  * pour qu'une sauvegarde locale invalide ne puisse jamais bloquer le
  * démarrage de l'application.
  */
-export function deserializeVines(json: string): SerializedVine[] | null {
+export function deserializeCanvas(json: string): CanvasSnapshot | null {
   try {
     const parsed: unknown = JSON.parse(json);
-    if (!Array.isArray(parsed) || !parsed.every(isSerializedVine)) return null;
+    if (!isCanvasSnapshot(parsed)) return null;
     return parsed;
   } catch {
     return null;

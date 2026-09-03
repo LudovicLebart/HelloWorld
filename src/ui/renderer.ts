@@ -33,17 +33,35 @@ function createLeafElement(leaf: BrushPlacement): SVGPathElement {
   return path;
 }
 
+const MASK_CLIP_PATH_ID = "vines-mask-clip";
+
 export class Renderer {
   private svg: SVGSVGElement;
   private vinesLayer: SVGGElement;
   private liveStroke: SVGPolylineElement;
+  private maskClipShape: SVGPolygonElement;
+  private maskOutline: SVGPolygonElement;
   private vines = new Map<string, VineGroup>();
 
   constructor(svg: SVGSVGElement) {
     this.svg = svg;
+
+    const defs = document.createElementNS(SVG_NS, "defs");
+    const clipPath = document.createElementNS(SVG_NS, "clipPath");
+    clipPath.setAttribute("id", MASK_CLIP_PATH_ID);
+    this.maskClipShape = document.createElementNS(SVG_NS, "polygon");
+    clipPath.appendChild(this.maskClipShape);
+    defs.appendChild(clipPath);
+    this.svg.appendChild(defs);
+
     this.vinesLayer = document.createElementNS(SVG_NS, "g");
     this.vinesLayer.setAttribute("id", "vines");
     this.svg.appendChild(this.vinesLayer);
+
+    this.maskOutline = document.createElementNS(SVG_NS, "polygon");
+    this.maskOutline.setAttribute("class", "mask-outline");
+    this.maskOutline.setAttribute("hidden", "");
+    this.svg.appendChild(this.maskOutline);
 
     this.liveStroke = document.createElementNS(SVG_NS, "polyline");
     this.liveStroke.setAttribute("class", "live-stroke");
@@ -52,6 +70,26 @@ export class Renderer {
 
   setLiveStroke(points: Point[] | null): void {
     this.liveStroke.setAttribute("points", points ? pointsToPolylineAttr(points) : "");
+  }
+
+  /**
+   * Définit (ou retire) la zone de travail : les lianes affichées sont
+   * recadrées en direct via `clip-path` (pas de recalcul de géométrie à
+   * chaque frame). L'export, lui, découpe réellement les contours par
+   * intersection booléenne — voir junction.ts — pour ne jamais dépendre
+   * d'un `clip-path` que tous les logiciels de découpe ne savent pas lire.
+   */
+  setMask(polygon: Point[] | null): void {
+    if (polygon && polygon.length >= 3) {
+      const attr = pointsToPolylineAttr(polygon);
+      this.maskClipShape.setAttribute("points", attr);
+      this.maskOutline.setAttribute("points", attr);
+      this.maskOutline.removeAttribute("hidden");
+      this.vinesLayer.setAttribute("clip-path", `url(#${MASK_CLIP_PATH_ID})`);
+    } else {
+      this.maskOutline.setAttribute("hidden", "");
+      this.vinesLayer.removeAttribute("clip-path");
+    }
   }
 
   /**
