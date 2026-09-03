@@ -2,29 +2,44 @@ import type { CurveSample, Point } from "./types";
 
 const DENSE_STEPS_PER_SEGMENT = 16;
 
-function catmullRom(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  return {
-    x:
-      0.5 *
-      (2 * p1.x +
-        (-p0.x + p2.x) * t +
-        (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-        (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
-    y:
-      0.5 *
-      (2 * p1.y +
-        (-p0.y + p2.y) * t +
-        (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
-        (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
-  };
+// Paramétrisation centripète (alpha = 0.5) : contrairement à la variante
+// uniforme, elle ne produit ni boucle ni surtension quand les points de
+// contrôle sont espacés de façon très inégale — exactement le cas d'un
+// tracé à main levée simplifié par RDP (dense dans les virages, épars
+// dans les portions droites). C'est ce qui rend la courbe "douce" plutôt
+// que cabossée près des changements de direction marqués.
+const CENTRIPETAL_ALPHA = 0.5;
+
+function lerp(a: Point, b: Point, t: number): Point {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+function knotStep(t: number, p0: Point, p1: Point): number {
+  const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+  // Plancher non nul : évite une division par zéro quand deux points
+  // coïncident (notamment les points fantômes dupliqués aux extrémités).
+  return t + Math.max(Math.pow(dist, CENTRIPETAL_ALPHA), 1e-6);
+}
+
+function centripetalCatmullRom(p0: Point, p1: Point, p2: Point, p3: Point, u: number): Point {
+  const t0 = 0;
+  const t1 = knotStep(t0, p0, p1);
+  const t2 = knotStep(t1, p1, p2);
+  const t3 = knotStep(t2, p2, p3);
+  const t = t1 + u * (t2 - t1);
+
+  const a1 = lerp(p0, p1, (t - t0) / (t1 - t0));
+  const a2 = lerp(p1, p2, (t - t1) / (t2 - t1));
+  const a3 = lerp(p2, p3, (t - t2) / (t3 - t2));
+  const b1 = lerp(a1, a2, (t - t0) / (t2 - t0));
+  const b2 = lerp(a2, a3, (t - t1) / (t3 - t1));
+  return lerp(b1, b2, (t - t1) / (t2 - t1));
 }
 
 /**
- * Interpole une spline de Catmull-Rom (Hermite interpolante) à travers
- * tous les points de contrôle fournis, en dupliquant les extrémités pour
- * que la courbe passe bien par le premier et le dernier point.
+ * Interpole une spline de Catmull-Rom centripète à travers tous les points
+ * de contrôle fournis, en dupliquant les extrémités pour que la courbe
+ * passe bien par le premier et le dernier point.
  */
 function denseCatmullRom(controlPoints: Point[]): Point[] {
   if (controlPoints.length < 2) return controlPoints.slice();
@@ -36,7 +51,7 @@ function denseCatmullRom(controlPoints: Point[]): Point[] {
   for (let i = 1; i < pts.length - 2; i++) {
     const [p0, p1, p2, p3] = [pts[i - 1], pts[i], pts[i + 1], pts[i + 2]];
     for (let step = 1; step <= DENSE_STEPS_PER_SEGMENT; step++) {
-      dense.push(catmullRom(p0, p1, p2, p3, step / DENSE_STEPS_PER_SEGMENT));
+      dense.push(centripetalCatmullRom(p0, p1, p2, p3, step / DENSE_STEPS_PER_SEGMENT));
     }
   }
 
