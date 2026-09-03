@@ -150,6 +150,14 @@ export class Renderer {
    * puisque l'affichage en direct garde une tige distincte par liane (pour
    * la sélection au clic) alors que l'export doit livrer un contour soudé,
    * sans double-trait à la jonction. Voir junction.ts.
+   *
+   * Contrairement à l'affichage en direct (groupé par liane, pour la
+   * sélection au clic), l'export regroupe TOUTES les tiges de TOUTES les
+   * grappes dans un unique calque `#layer-stem`, et tous les motifs dans un
+   * unique `#layer-leaves` couvrant tout le canevas — pour pouvoir découper
+   * en un seul lot toutes les tiges dans un matériau et tous les motifs dans
+   * un autre, sans avoir à les regrouper manuellement liane par liane dans
+   * le logiciel de découpe. Voir docs/how-to/exporter-pour-cnc-laser.md.
    */
   exportSVG(clusters: ExportCluster[]): string {
     const rect = this.svg.getBoundingClientRect();
@@ -162,33 +170,26 @@ export class Renderer {
     svg.setAttribute("height", String(height));
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-    const vinesLayer = document.createElementNS(SVG_NS, "g");
-    vinesLayer.setAttribute("id", "vines");
-    svg.appendChild(vinesLayer);
+    const stemLayer = document.createElementNS(SVG_NS, "g");
+    stemLayer.setAttribute("id", "layer-stem");
+    const leavesLayer = document.createElementNS(SVG_NS, "g");
+    leavesLayer.setAttribute("id", "layer-leaves");
 
     for (const cluster of clusters) {
-      const group = document.createElementNS(SVG_NS, "g");
-      group.setAttribute("class", "vine");
-
-      const stemLayer = document.createElementNS(SVG_NS, "g");
-      stemLayer.setAttribute("class", "layer-stem");
       const stem = document.createElementNS(SVG_NS, "path");
       stem.setAttribute("class", "stem-path");
       stem.setAttribute("d", cluster.stemPathD);
       stemLayer.appendChild(stem);
-      group.appendChild(stemLayer);
 
       for (const leaves of cluster.leafGroups) {
-        const leavesLayer = document.createElementNS(SVG_NS, "g");
-        leavesLayer.setAttribute("class", "layer-leaves");
         for (const leaf of leaves) {
           leavesLayer.appendChild(createLeafElement(leaf));
         }
-        group.appendChild(leavesLayer);
       }
-
-      vinesLayer.appendChild(group);
     }
+
+    svg.appendChild(stemLayer);
+    svg.appendChild(leavesLayer);
 
     return new XMLSerializer().serializeToString(svg);
   }

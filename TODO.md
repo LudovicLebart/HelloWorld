@@ -65,10 +65,10 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
 ## Étape 4 — Export & production (le livrable)
 
 - [x] Export SVG en chemins fermés (tige et motifs), jamais de traits épaissis
-- [x] Séparation Tige/Feuilles en sous-calques, mais **par liane**
-- [ ] Calques globaux Tige/Feuilles couvrant tout le canevas (toutes lianes
+- [x] Calques globaux Tige/Feuilles couvrant tout le canevas (toutes lianes
       confondues), pour découper en un lot toutes les tiges dans un matériau et
-      tous les motifs dans un autre — voir
+      tous les motifs dans un autre (`#layer-stem`/`#layer-leaves`, plus de
+      regroupement par liane à l'export) — voir
       [`docs/how-to/exporter-pour-cnc-laser.md`](docs/how-to/exporter-pour-cnc-laser.md)
 - [ ] Export séparé par motif (toutes les feuilles ensemble, toutes les volutes
       ensemble, etc.), utile si chaque motif va dans un matériau différent

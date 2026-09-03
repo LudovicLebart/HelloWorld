@@ -8,25 +8,30 @@
 
 ## Ce que contient le fichier
 
-- Chaque liane est un groupe `<g class="vine">` distinct, contenant deux
-  sous-groupes : `layer-stem` (la tige) et `layer-leaves` (les motifs).
-- La tige est un unique `<path>` : un polygone fermé à épaisseur variable, pas un
+- Deux calques couvrent tout le canevas, toutes lianes confondues : `#layer-stem`
+  (toutes les tiges) et `#layer-leaves` (tous les motifs) — sélectionnez l'un ou
+  l'autre dans votre logiciel de découpe pour traiter en un seul lot tout ce qui va
+  dans un même matériau, sans avoir à regrouper les lianes une par une.
+- Chaque tige est un unique `<path>` : un polygone fermé à épaisseur variable, pas un
   trait avec un `stroke-width` — indispensable pour qu'un logiciel de découpe (Inkscape,
   Illustrator, LightBurn…) le traite comme un contour de coupe et non comme une ligne
-  centrale.
-- Chaque motif (feuille, volute, fleur) est aussi un `<path>` fermé indépendant,
-  positionné par un `transform="translate(...) rotate(...) scale(...)"`.
+  centrale. Une liane et ses branches partagent un seul contour soudé (voir
+  [Créer une branche](creer-une-branche.md)) ; une liane sans branche n'occupe qu'un
+  `<path>`.
+- Chaque motif (feuille, volute, fleur) est aussi un `<path>` fermé indépendant dans
+  `#layer-leaves`, positionné par un `transform="translate(...) rotate(...) scale(...)"`
+  et gardant sa classe (`motif-leaf`/`motif-volute`/`motif-flower`) si vous voulez
+  ensuite les distinguer par matériau à l'intérieur de ce calque.
 - L'overlay d'édition (nœuds, poignées) et l'aperçu de tracé en cours ne sont jamais
   inclus dans l'export.
 
-## Limite actuelle : pas encore de calques globaux par matériau
+## Limite actuelle : pas encore de séparation par motif
 
-Les calques `layer-stem`/`layer-leaves` existent **par liane**, pas globalement pour
-tout le canevas. Pour découper par exemple toutes les tiges en laiton et toutes les
-feuilles en nacre en un seul lot, il faut aujourd'hui sélectionner manuellement tous
-les `layer-stem` (ou tous les `layer-leaves`) dans votre logiciel de découpe et les
-regrouper vous-même. Un export avec deux calques couvrant tout le canevas est
-prévu — voir [`TODO.md`](../../TODO.md).
+`#layer-leaves` regroupe tous les motifs ensemble (feuilles, volutes, fleurs mêlées).
+Pour découper chaque motif dans un matériau différent, il faut aujourd'hui trier par
+classe CSS (`motif-leaf`, `motif-volute`, `motif-flower`) dans votre logiciel de
+découpe. Un export qui les sépare directement en sous-calques est prévu — voir
+[`TODO.md`](../../TODO.md).
 
 ## Retoucher avant découpe
 
