@@ -149,6 +149,19 @@ quand on y revient :
       d'annulation pour le retrait et la régénération. Limite connue : une liane
       tracée à la main sur une volute auto-générée devient orpheline si cette volute
       est retirée lors d'un remplacement — voir le how-to.
+- [x] Génération automatique au tracé + curseurs live : plus besoin de cliquer
+      **Volutes auto** — tracer une ligne (tige racine ou branche tirée à la main)
+      lui donne ses volutes tout de suite (`regenerateAutoVolutes()` appelé depuis
+      `createVineFromNodes()`, même pas d'annulation que le tracé), et les 5 curseurs
+      de forme régénèrent en direct (`refreshAutoVolutes()`, même schéma que Épaisseur
+      tige/Espacement : pas de pas d'annulation par micro-ajustement). Le bouton
+      **Volutes auto** reste comme déclencheur manuel de secours (liane ancienne,
+      après édition de nœuds).
+      Barre d'outils simplifiée en même temps (« mode focus volutes », temporaire et
+      réversible — voir les commentaires `hidden` dans `index.html`) : modes
+      Points/Masque, séquenceur de motifs et curseur Espacement masqués pour laisser
+      la place au dessin ; gardés visibles : Densité, Épaisseur tige, Volutes auto (+
+      curseurs), Annuler/Rétablir, Effacer, Exporter SVG.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),

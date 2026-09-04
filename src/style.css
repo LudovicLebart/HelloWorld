@@ -10,6 +10,13 @@
   box-sizing: border-box;
 }
 
+/* L'attribut hidden doit toujours l'emporter, y compris sur un élément dont une règle plus loin
+   (ex. .mode-toggle, .controls label) fixe explicitement display:flex — sans quoi cette règle
+   d'auteur masque le défaut [hidden]{display:none} de la feuille de style du navigateur. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;

@@ -15,15 +15,19 @@
       <header id="toolbar">
         <h1>Vignes &amp; Arabesques</h1>
         <div class="controls">
-          <div class="mode-toggle" role="group" aria-label="Mode de tracé">
+          <!-- Mode focus volutes (temporaire, réversible — retirer les `hidden` ci-dessous pour
+               revenir à la barre d'outils complète) : seul le mode Libre reste utilisable, donc
+               plus besoin d'un sélecteur ; Points/Masque et leurs boutons associés sont masqués. -->
+          <div class="mode-toggle" role="group" aria-label="Mode de tracé" hidden>
             <button id="mode-freehand" class="mode-button active">Libre</button>
             <button id="mode-points" class="mode-button">Points</button>
             <button id="mode-mask" class="mode-button">Masque</button>
           </div>
           <button id="finish-points" hidden>Terminer le tracé</button>
           <button id="finish-mask" hidden>Terminer le masque</button>
-          <button id="clear-mask">Effacer le masque</button>
-          <fieldset class="motif-sequence">
+          <button id="clear-mask" hidden>Effacer le masque</button>
+          <!-- Mode focus volutes : l'habillage par motifs n'est pas la priorité pour l'instant. -->
+          <fieldset class="motif-sequence" hidden>
             <legend>Motifs (ordre, échelle, jitter)</legend>
             <!-- Rempli dynamiquement par main.ts à partir du registre assets/motifs.ts (motifs
                  internes + tout .svg déposé dans assets/motifs/) — voir docs/how-to/ajouter-un-motif.md. -->
@@ -33,7 +37,8 @@
             Densité des points
             <input id="density" type="range" min="0" max="100" value="55" step="1" />
           </label>
-          <label>
+          <!-- Mode focus volutes : espacement du brush de motifs, hors sujet pour l'instant. -->
+          <label hidden>
             Espacement
             <input id="spacing" type="range" min="8" max="60" value="26" step="1" />
           </label>
@@ -68,7 +73,7 @@
               <input id="auto-branch-recursion" type="range" min="0" max="3" value="2" step="1" />
             </label>
           </fieldset>
-          <button id="auto-branch" title="Génère des volutes secondaires automatiquement sur la liane sélectionnée">Volutes auto</button>
+          <button id="auto-branch" title="Régénère les volutes de la liane sélectionnée — les nouvelles lianes tracées en obtiennent déjà automatiquement">Volutes auto</button>
           <button id="clear">Effacer</button>
           <button id="export">Exporter SVG</button>
         </div>
