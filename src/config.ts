@@ -43,23 +43,24 @@ export const MOTIF_JITTER_RANGE = { min: 0, max: 100 };
     principes (rinceau classique, phyllotaxie, spirale logarithmique) dont ces valeurs découlent. */
 export const AUTO_BRANCH = {
   /** Distance (px, longueur d'arc) visée entre deux points d'accroche — la densité réelle suit la
-      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Relevé à 160 (au
-      lieu de 90) pour calibrer sur la planche 5 du moodboard (peu de boucles, largement espacées) —
-      voir docs/how-to/generer-des-volutes-automatiquement.md. */
-  spacing: 160,
+      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Abaissé à 70
+      (calibrage planche 3 du moodboard : tendeurs fins et nombreux) — voir
+      docs/how-to/generer-des-volutes-automatiquement.md. */
+  spacing: 70,
   /** Fraction de la longueur totale laissée nue à chaque extrémité — jamais de volute exactement à
       la racine ou à la pointe de la tige. */
   marginFraction: 0.08,
-  /** Nombre de tours de chaque volute générée. */
-  turns: 1.6,
+  /** Nombre de tours de chaque volute générée. Relevé à 2 (calibrage planche 3 : tendeurs qui
+      s'enroulent un peu plus complètement que les grandes boucles de la planche 5). */
+  turns: 2,
   /** Taux de décroissance du rayon par radian (r = r0·e^(-b·θ)) — plus grand = volute qui se
       resserre plus vite vers son centre. À 0.07, le rayon garde ~65 % de sa valeur par tour
       complet (contre ~39 % à l'ancienne valeur de 0.15) : une spirale nettement plus ouverte,
       aux boucles distinctes plutôt qu'une pelote serrée. */
   growthRate: 0.07,
-  /** Rayon de départ de la première volute, en multiple de l'épaisseur de la tige parente. Relevé
-      à 5 (au lieu de 3.5) pour des boucles plus grandes et affirmées, calibrage planche 5. */
-  startRadiusFactor: 5,
+  /** Rayon de départ de la première volute, en multiple de l'épaisseur de la tige parente. Abaissé
+      à 2.2 (calibrage planche 3 : tendeurs fins, pas de grandes boucles affirmées). */
+  startRadiusFactor: 2.2,
   /** Facteur de décroissance géométrique du rayon de départ appliqué à chaque volute suivante le
       long de la tige (rinceau classique : chaque volute plus petite que la précédente). */
   sizeDecay: 0.85,

@@ -169,12 +169,20 @@ quand on y revient :
       `recursionDepth` 2→0 (moins de volutes, plus grandes, sans imbrication) ; aucun
       motif actif par défaut (`core/brush.ts` et `main.ts` traitent désormais une
       séquence vide comme un état légitime, plus un repli défensif sur un motif par
-      défaut). Planche 3 (vrille fine + feuilles groupées par paires) est la prochaine
-      cible.
+      défaut).
+- [x] Planche 3 (vrille fine, tendeurs nombreux, feuillage clairsemé) prise comme
+      cible suivante — première passe par réglage seul, sans nouvelle logique
+      `core/` : `AUTO_BRANCH.spacing` 160→70, `startRadiusFactor` 5→2.2, `turns`
+      1.6→2 (tendeurs plus petits et plus fréquents) ; motif Feuille seul actif par
+      défaut (Fleur/Volute-motif/Baie décochées) ; `Espacement` (brush) 26→40 pour
+      garder le feuillage clairsemé plutôt que dense sur la tige principale.
+      Volontairement pas encore de regroupement explicite de feuilles aux points
+      d'embranchement (item suivant) — à réévaluer si ce réglage seul ne suffit pas.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
-      découplé aujourd'hui de `core/branching.ts`.
+      découplé aujourd'hui de `core/branching.ts`. Prochaine étape si le réglage seul
+      (item précédent) reste visuellement trop éloigné de la planche 3.
 - [ ] Épaisseur de trait variable dans une volute (plus épais à l'attache, effilé
       vers le centre du coil) — effet calligraphique observé sur plusieurs références ;
       touche au profil d'épaisseur de la tige (`core/stem.ts`), aujourd'hui uniforme le

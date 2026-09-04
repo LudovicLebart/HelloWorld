@@ -57,11 +57,12 @@ for (const motif of MOTIFS) {
 }
 
 // Mode focus volutes : le panneau Motifs est masqué (voir index.html), donc aucune interaction
-// n'est possible pour décocher un motif — on démarre sans aucun motif actif (silhouette pure,
-// visée : planche 5 du moodboard). currentSequence()/placeBrush() traitent désormais "aucun motif
-// actif" comme un état légitime plutôt qu'un repli sur le premier motif.
+// n'est possible pour changer les motifs actifs — on démarre avec seulement Feuille cochée
+// (silhouette avec un feuillage clairsemé, visée : planche 3 du moodboard), Fleur/Volute-motif/Baie
+// décochées. currentSequence()/placeBrush() traitent "aucun motif actif" comme un état légitime,
+// ce qui reste vrai si on décoche tout depuis ce point de départ.
 for (const li of motifRows(motifListEl)) {
-  li.querySelector<HTMLInputElement>(".motif-active")!.checked = false;
+  li.querySelector<HTMLInputElement>(".motif-active")!.checked = li.dataset.motif === "leaf";
 }
 
 type Mode = "freehand" | "points" | "mask";

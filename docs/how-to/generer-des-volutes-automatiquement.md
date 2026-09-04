@@ -6,11 +6,13 @@ secondaires en forme de volute, générées algorithmiquement — voir
 les principes (spirale logarithmique, rinceau, phyllotaxie) dont les règles
 appliquées sont issues.
 
-Les réglages par défaut sont actuellement calibrés sur la planche 5 de la galerie
-« Planches Volutes » (moodboard publié en Artifact — trait calligraphique pur, sans
-feuillage, quelques grandes boucles ouvertes) : peu de volutes, plus grandes,
-sans récursion, et aucun motif actif au démarrage. La planche 3 (vrille fine + feuilles
-groupées par paires) est la prochaine cible envisagée.
+Les réglages par défaut sont actuellement calibrés sur la planche 3 de la galerie
+« Planches Volutes » (moodboard publié en Artifact — vrille fine, tendeurs fins et
+nombreux, feuillage clairsemé) : volutes petites et fréquentes, sans récursion, motif
+Feuille seul actif au démarrage. Étape précédente : planche 5 (trait calligraphique
+pur, sans feuillage, quelques grandes boucles ouvertes) — toujours atteignable en
+poussant **Taille de départ** et en réduisant l'espacement des points d'accroche
+(constante `AUTO_BRANCH.spacing`, non exposée en curseur) et en décochant Feuille.
 
 ## Utilisation
 
@@ -46,13 +48,15 @@ sur cette liane plutôt que de l'ajouter par-dessus.
 Un tracé et ses volutes forment un seul pas d'annulation — un Ctrl+Z (ou clic sur
 **Annuler**) les retire tous en même temps.
 
-## Pas de motif par défaut
+## Motifs actifs par défaut
 
-Le panneau Motifs étant masqué (voir plus bas), aucun motif n'est actif au démarrage :
-la liane générée est une silhouette pure (tige + volutes), sans feuille ni fleur ni
-baie. C'est un état normal — `placeBrush()` (`core/brush.ts`) et `currentSequence()`
-(`main.ts`) traitent une séquence vide comme « pas de motif », pas comme un repli à
-corriger.
+Le panneau Motifs étant masqué (voir plus bas), aucune interaction n'est possible pour
+changer les motifs actifs au démarrage : seul Feuille est coché (Fleur, Volute-motif et
+Baie ne le sont pas), pour un feuillage clairsemé sans fleur ni baie. Décocher
+totalement les motifs (comme pour calibrer sur la planche 5) reste un état légitime —
+`placeBrush()` (`core/brush.ts`) et `currentSequence()` (`main.ts`) traitent une
+séquence vide comme « pas de motif », pas comme un repli à corriger — mais demande de
+modifier `main.ts` tant que le panneau reste masqué.
 
 ## Ce qui reste fixe
 
