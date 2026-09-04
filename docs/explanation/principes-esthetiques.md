@@ -66,21 +66,9 @@ laisser un vide résiduel en bout de tracé. Un critère utile pour caler automa
 *combien* d'embranchements secondaires générer en fonction de la longueur du tracé
 utilisateur, plutôt que d'en fixer un nombre arbitraire.
 
-## L'art du bonsaï : jamais une branche vers le creux {#lart-du-bonsaï-jamais-une-branche-vers-le-creux}
-
-Un principe de conduite du bonsaï, moins souvent cité aux côtés des précédents mais
-tout aussi opérant ici : une branche qui pousse vers l'intérieur (concave) d'une
-courbure du tronc paraît étouffée, comme si l'arbre se refermait sur lui-même, alors
-qu'une branche qui se détache du côté extérieur (convexe) d'un virage prolonge le
-mouvement et se lit comme vivante. Le praticien élague systématiquement les branches
-qui poussent vers ce creux. Appliqué à une tige procédurale : le côté (gauche/droite)
-choisi pour chaque embranchement ne peut pas être une simple alternance mécanique
-indifférente à la forme locale de la tige — il doit dépendre du sens de courbure à cet
-endroit précis, et toujours pointer vers le côté convexe.
-
 ## Synthèse : ce qu'on en tire pour le générateur
 
-Sept principes, sept traductions en règles de génération :
+Cinq principes, cinq traductions en règles de génération :
 
 1. **Spirale logarithmique** — les volutes générées automatiquement suivent
    `r = a·e^(bθ)`, avec `b` comme paramètre de « serrage », plutôt qu'un arc ou une
@@ -94,17 +82,20 @@ Sept principes, sept traductions en règles de génération :
    C1, jamais d'angle vif) et décroît géométriquement par rapport à sa mère.
 5. **Arabesque** — la densité d'embranchement se cale sur la longueur totale du tracé,
    pour ne jamais laisser un segment de tige nu ni sur-charger un segment court.
-6. **Bonsaï** — le côté (gauche/droite) de chaque embranchement suit le sens de
-   courbure local de la tige : toujours le côté convexe (extérieur du virage), jamais
-   le côté concave (le creux). Sur un tronçon localement droit, où cette notion n'a pas
-   de sens, retombe sur une alternance simple — qui redevient alors la seule règle en
-   jeu, cohérente avec le principe 3.
 
 C'est la base du prototype (`core/branching.ts`, `core/logSpiral.ts`) : un module qui
 prend la tige existante (`core/spline.ts`) et génère des branches secondaires en
 appliquant ces règles, avant d'habiller le résultat avec le brush existant
 (`core/brush.ts`) — voir
 [Générer des volutes automatiquement](../how-to/generer-des-volutes-automatiquement.md).
+
+Un principe de conduite du bonsaï (jamais une branche vers le côté concave d'une
+courbure du tronc) avait un temps été retenu ici comme sixième règle, et le côté
+d'un embranchement dérivé de la courbure locale de la tige en conséquence. Écarté
+après examen d'un moodboard de références (arabesques Art nouveau, rinceaux) : ces
+compositions ne suivent pas cette contrainte — volutes et vrilles s'enroulent
+librement des deux côtés, y compris vers le creux d'un virage. Le côté d'un
+embranchement reste donc une simple alternance gauche/droite (voir 3).
 
 ## Sources
 
