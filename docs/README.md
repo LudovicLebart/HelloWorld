@@ -24,7 +24,8 @@ entre deux quadrants, c'est qu'elle devrait être scindée.
   [Ajouter un nouveau motif](how-to/ajouter-un-motif.md) ·
   [Séquencer les motifs](how-to/sequencer-des-motifs.md) ·
   [Définir une zone de travail (masque)](how-to/definir-une-zone-de-travail.md) ·
-  [Installer l'app et l'utiliser hors-ligne](how-to/installer-hors-ligne.md)
+  [Installer l'app et l'utiliser hors-ligne](how-to/installer-hors-ligne.md) ·
+  [Générer des volutes automatiquement](how-to/generer-des-volutes-automatiquement.md)
 - Référence : [Architecture des modules](reference/architecture.md) ·
   [Paramètres de l'interface](reference/parametres.md)
 - Explications : [Le modèle procédural](explanation/modele-procedural.md) ·

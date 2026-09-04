@@ -105,8 +105,14 @@ l'utilisateur — voir
 les principes retenus (spirale logarithmique, fairness, angle d'or, tangence,
 décroissance géométrique).
 
-- [ ] Prototype : module de branchement automatique appliquant ces règles à une tige
-      existante
+- [x] Prototype : module de branchement automatique appliquant ces règles à une tige
+      existante — `core/logSpiral.ts` (échantillonnage de spirale logarithmique) +
+      `core/branching.ts` (points d'accroche, raccord tangent, décroissance
+      géométrique), bouton **Volutes auto** dans la barre d'outils. Voir
+      [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
+      Prototype volontairement figé (constantes `AUTO_BRANCH`, pas de réglages dédiés
+      ni de remplacement d'un lot déjà généré) — à affiner une fois la direction
+      validée à l'usage.
 
 ## Hors-scope pour l'instant
 

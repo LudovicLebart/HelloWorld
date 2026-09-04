@@ -14,6 +14,7 @@ import {
   type VineParams,
   type CanvasSnapshot,
 } from "./core/vine";
+import { planAutoBranches, buildAutoBranchPoints } from "./core/branching";
 import { unionStemPolygons } from "./core/junction";
 import { isPointInMask } from "./core/mask";
 import { SnapshotHistory } from "./core/history";
@@ -40,6 +41,7 @@ const redoButton = document.querySelector<HTMLButtonElement>("#redo")!;
 const modeFreehandButton = document.querySelector<HTMLButtonElement>("#mode-freehand")!;
 const modePointsButton = document.querySelector<HTMLButtonElement>("#mode-points")!;
 const modeMaskButton = document.querySelector<HTMLButtonElement>("#mode-mask")!;
+const autoBranchButton = document.querySelector<HTMLButtonElement>("#auto-branch")!;
 const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")!;
 const finishMaskButton = document.querySelector<HTMLButtonElement>("#finish-mask")!;
 const clearMaskButton = document.querySelector<HTMLButtonElement>("#clear-mask")!;
@@ -213,15 +215,42 @@ function wireVine(id: string): void {
   });
 }
 
-function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
-  if (nodes.length < 2) return;
-  pushUndo();
+/** Crée une liane sans étape d'annulation ni sauvegarde propres — pour un appelant qui gère lui-même
+    ces deux effets autour d'un lot de créations (voir generateAutoBranches). */
+function addVine(nodes: EditableNode[], parentId?: string): string {
   const id = newVineId();
   wireVine(id);
   const params = liveParams(parentId);
   vines.set(id, { nodes, parentId, params, curve: [], stemPolygon: [], leaves: [] });
   regenerateAndRender(id, params);
+  return id;
+}
+
+function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
+  if (nodes.length < 2) return;
+  pushUndo();
+  const id = addVine(nodes, parentId);
   selectVine(id);
+  saveSnapshot();
+}
+
+/** Génère des volutes secondaires automatiquement sur la liane sélectionnée, en branches du même
+    type que celles tracées à la main — voir core/branching.ts et
+    docs/explanation/principes-esthetiques.md pour les règles appliquées. Un seul pas d'annulation
+    pour tout le lot généré, pas un par volute. */
+function generateAutoBranches(): void {
+  if (!selectedId) return;
+  const vine = vines.get(selectedId);
+  if (!vine || vine.curve.length < 2) return;
+  const plans = planAutoBranches(vine.curve);
+  if (plans.length === 0) return;
+  pushUndo();
+  const parentId = selectedId;
+  plans.forEach((attachment, i) => {
+    const points = buildAutoBranchPoints(attachment, vine.params.stemWidth, i);
+    const nodes = nodesFromClicks(points);
+    if (nodes.length >= 2) addVine(nodes, parentId);
+  });
   saveSnapshot();
 }
 
@@ -331,6 +360,7 @@ finishButton.addEventListener("click", () => {
 finishMaskButton.addEventListener("click", () => {
   if (pendingMaskPoints.length >= 3) finishMask();
 });
+autoBranchButton.addEventListener("click", generateAutoBranches);
 clearMaskButton.addEventListener("click", () => {
   if (!mask) return;
   pushUndo();
