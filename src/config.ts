@@ -51,8 +51,10 @@ export const AUTO_BRANCH = {
   /** Nombre de tours de chaque volute générée. */
   turns: 1.6,
   /** Taux de décroissance du rayon par radian (r = r0·e^(-b·θ)) — plus grand = volute qui se
-      resserre plus vite vers son centre. */
-  growthRate: 0.15,
+      resserre plus vite vers son centre. À 0.07, le rayon garde ~65 % de sa valeur par tour
+      complet (contre ~39 % à l'ancienne valeur de 0.15) : une spirale nettement plus ouverte,
+      aux boucles distinctes plutôt qu'une pelote serrée. */
+  growthRate: 0.07,
   /** Rayon de départ de la première volute, en multiple de l'épaisseur de la tige parente. */
   startRadiusFactor: 3.5,
   /** Facteur de décroissance géométrique du rayon de départ appliqué à chaque volute suivante le

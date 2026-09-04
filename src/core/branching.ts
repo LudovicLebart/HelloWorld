@@ -46,16 +46,28 @@ function rotate(p: Point, cos: number, sin: number): Point {
   return { x: p.x * cos - p.y * sin, y: p.x * sin + p.y * cos };
 }
 
+/** Sous-ensemble de `AUTO_BRANCH` réglable en direct (curseurs de la barre d'outils, voir
+    `autoBranchParams()` dans main.ts) plutôt que figé à sa valeur par défaut. */
+export type AutoBranchShapeOverrides = Partial<Pick<typeof AUTO_BRANCH, "turns" | "growthRate" | "startRadiusFactor" | "sizeDecay">>;
+
 /**
  * Construit les points bruts (repère du canevas) d'une volute générée automatiquement à un point
  * d'accroche : raccord à un angle fixe par rapport à la tangente de la tige parente (jamais un
  * prolongement tout droit — `launchAngle`), sens d'enroulement selon le côté d'accroche, et taille
  * décroissant géométriquement à mesure que `generationIndex` avance le long de la tige (rinceau
  * classique : chaque volute plus petite que la précédente). `stemWidth` sert d'échelle de référence
- * pour que la volute reste proportionnée à l'épaisseur de la tige qui la porte.
+ * pour que la volute reste proportionnée à l'épaisseur de la tige qui la porte. `overrides` remplace
+ * ponctuellement `turns`/`growthRate`/`startRadiusFactor`/`sizeDecay` sans toucher aux valeurs par
+ * défaut de `AUTO_BRANCH` — absent, le comportement est identique à avant l'ajout des curseurs.
  */
-export function buildAutoBranchPoints(attachment: AutoBranchAttachment, stemWidth: number, generationIndex: number): Point[] {
-  const { turns, growthRate, startRadiusFactor, sizeDecay, launchAngle, samplesPerTurn } = AUTO_BRANCH;
+export function buildAutoBranchPoints(
+  attachment: AutoBranchAttachment,
+  stemWidth: number,
+  generationIndex: number,
+  overrides?: AutoBranchShapeOverrides,
+): Point[] {
+  const { launchAngle, samplesPerTurn } = AUTO_BRANCH;
+  const { turns, growthRate, startRadiusFactor, sizeDecay } = { ...AUTO_BRANCH, ...overrides };
   const startRadius = stemWidth * startRadiusFactor * Math.pow(sizeDecay, generationIndex);
   const spiral = sampleLogSpiral({
     turns,

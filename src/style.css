@@ -190,6 +190,22 @@ button:disabled {
   padding: 0 0.3rem;
 }
 
+.auto-branch-params {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  margin: 0;
+}
+
+.auto-branch-params legend {
+  font-size: 0.65rem;
+  color: #6b5f4c;
+  padding: 0 0.3rem;
+}
+
 #motif-list {
   display: flex;
   flex-direction: column;

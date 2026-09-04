@@ -147,6 +147,16 @@ export class Renderer {
     this.setLiveStroke(null);
   }
 
+  /** Retire une seule liane du canevas (groupe SVG et gestes attachés) — sert par exemple à
+      remplacer un lot de volutes auto-générées par un nouveau plutôt que de l'empiler, voir
+      generateAutoBranches() dans main.ts. Sans effet si l'id est déjà absent. */
+  removeVine(id: string): void {
+    const vine = this.vines.get(id);
+    if (!vine) return;
+    vine.group.remove();
+    this.vines.delete(id);
+  }
+
   /**
    * Construit un document SVG autonome à partir de grappes déjà fusionnées
    * (une grappe = une liane racine et ses branches, contour de tige unique) —
