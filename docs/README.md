@@ -28,7 +28,8 @@ entre deux quadrants, c'est qu'elle devrait être scindée.
 - Référence : [Architecture des modules](reference/architecture.md) ·
   [Paramètres de l'interface](reference/parametres.md)
 - Explications : [Le modèle procédural](explanation/modele-procedural.md) ·
-  [Des points au squelette éditable](explanation/courbes-et-noeuds.md)
+  [Des points au squelette éditable](explanation/courbes-et-noeuds.md) ·
+  [Ce qui rend une arabesque gracieuse](explanation/principes-esthetiques.md)
 
 Le plan d'ensemble et les prochaines étapes vivent dans [`TODO.md`](../TODO.md) à la
 racine du dépôt.

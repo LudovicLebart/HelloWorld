@@ -96,6 +96,18 @@ détail de ce qui existe déjà, voir [`docs/reference/architecture.md`](docs/re
       d'accueil, fonctionne sans connexion une fois ouverte une première fois — voir
       [Installer l'app et l'utiliser hors-ligne](docs/how-to/installer-hors-ligne.md)
 
+## Étape 5 — Génération procédurale de l'habillage (grâce/esthétique)
+
+Faire générer automatiquement les courbes secondaires (volutes, ramifications) à partir
+d'une ou deux courbes tracées, plutôt que de se limiter à habiller la ligne tracée par
+l'utilisateur — voir
+[Ce qui rend une arabesque gracieuse](docs/explanation/principes-esthetiques.md) pour
+les principes retenus (spirale logarithmique, fairness, angle d'or, tangence,
+décroissance géométrique).
+
+- [ ] Prototype : module de branchement automatique appliquant ces règles à une tige
+      existante
+
 ## Hors-scope pour l'instant
 
 Idées écartées ou reportées volontairement, pour ne pas recréer un Illustrator
