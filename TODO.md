@@ -122,13 +122,14 @@ Pistes identifiées à partir d'un moodboard de références (volutes Art nouvea
 voir la conversation du 2026-09-04) — non planifiées dans un ordre précis, à trier
 quand on y revient :
 
-- [ ] Volutes récursives : une volute générée fait pousser sa propre volute plus
-      petite (en cascade, profondeur limitée) plutôt qu'une volute isolée par point
-      d'accroche — explique la « touffe » dense de spirales imbriquées visible dans la
-      plupart des références (contrairement à notre unique spirale isolée par
-      embranchement). S'appuierait sur `core/branching.ts` existant : appel récursif
-      sur la courbe de la branche nouvellement créée, avec décroissance de taille et
-      profondeur plafonnée.
+- [x] Volutes récursives : une volute générée fait pousser sa propre volute plus
+      petite (en cascade, profondeur limitée par `AUTO_BRANCH.recursionDepth`) plutôt
+      qu'une volute isolée par point d'accroche — donne la « touffe » dense de
+      spirales imbriquées visible dans la plupart des références. Implémenté dans
+      `main.ts` (`spawnAutoBranches()`), en réappliquant `planAutoBranches()`/
+      `buildAutoBranchPoints()` (`core/branching.ts`, inchangé) à la courbe de chaque
+      branche nouvellement créée — aucune nouvelle logique dans `core/`. Voir
+      [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
 - [ ] Spirales plus serrées : 2 à 3 tours plutôt que les 1,6 actuels
       (`AUTO_BRANCH.turns`/`growthRate`) — simple réglage de constantes, pas de
       changement structurel.

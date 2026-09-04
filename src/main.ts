@@ -23,7 +23,7 @@ import { attachPointerCapture, attachClickToPlace } from "./ui/pointerCapture";
 import { Renderer, type ExportCluster } from "./ui/renderer";
 import { NodeEditor } from "./ui/nodeEditor";
 import { buildMotifRow, motifRows, updateMotifOrderButtons } from "./ui/motifList";
-import { STORAGE_KEY, UNDO_LIMIT, BRANCH_SNAP_RADIUS, DENSITY_EPSILON_RANGE } from "./config";
+import { STORAGE_KEY, UNDO_LIMIT, BRANCH_SNAP_RADIUS, DENSITY_EPSILON_RANGE, AUTO_BRANCH } from "./config";
 import { MOTIFS } from "./assets/motifs";
 
 const svg = document.querySelector<SVGSVGElement>("#canvas")!;
@@ -237,7 +237,7 @@ function createVineFromNodes(nodes: EditableNode[], parentId?: string): void {
 /** Génère des volutes secondaires automatiquement sur la liane sélectionnée, en branches du même
     type que celles tracées à la main — voir core/branching.ts et
     docs/explanation/principes-esthetiques.md pour les règles appliquées. Un seul pas d'annulation
-    pour tout le lot généré, pas un par volute. */
+    pour tout le lot généré (récursion comprise), pas un par volute. */
 function generateAutoBranches(): void {
   if (!selectedId) return;
   const vine = vines.get(selectedId);
@@ -245,13 +245,35 @@ function generateAutoBranches(): void {
   const plans = planAutoBranches(vine.curve);
   if (plans.length === 0) return;
   pushUndo();
-  const parentId = selectedId;
-  plans.forEach((attachment, i) => {
-    const points = buildAutoBranchPoints(attachment, vine.params.stemWidth, i);
-    const nodes = nodesFromClicks(points);
-    if (nodes.length >= 2) addVine(nodes, parentId);
-  });
+  spawnAutoBranches(plans, selectedId, vine.params.stemWidth, 0, AUTO_BRANCH.recursionDepth);
   saveSnapshot();
+}
+
+/** Crée les branches d'un lot de points d'accroche déjà planifiés puis, tant qu'il reste de la
+    profondeur (`depthRemaining`), fait pousser récursivement les propres volutes de chaque branche
+    créée sur sa propre courbe — la « touffe » de spirales imbriquées d'un rinceau, plutôt qu'une
+    volute isolée par embranchement. `baseGenerationIndex` prolonge la décroissance géométrique de
+    taille (`AUTO_BRANCH.sizeDecay`) d'un niveau de récursion à l'autre, pour qu'une volute petite-
+    fille reste plus petite que sa mère, elle-même plus petite que la tige d'origine. */
+function spawnAutoBranches(
+  plans: ReturnType<typeof planAutoBranches>,
+  parentId: string,
+  stemWidth: number,
+  baseGenerationIndex: number,
+  depthRemaining: number,
+): void {
+  plans.forEach((attachment, i) => {
+    const generationIndex = baseGenerationIndex + i;
+    const points = buildAutoBranchPoints(attachment, stemWidth, generationIndex);
+    const nodes = nodesFromClicks(points);
+    if (nodes.length < 2) return;
+    const branchId = addVine(nodes, parentId);
+    if (depthRemaining <= 0) return;
+    const childPlans = planAutoBranches(vines.get(branchId)!.curve);
+    if (childPlans.length > 0) {
+      spawnAutoBranches(childPlans, branchId, stemWidth, generationIndex + 1, depthRemaining - 1);
+    }
+  });
 }
 
 function finishPointsVine(): void {

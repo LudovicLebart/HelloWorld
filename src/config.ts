@@ -63,4 +63,13 @@ export const AUTO_BRANCH = {
   launchAngle: Math.PI / 2.4,
   /** Échantillons par tour de spirale. */
   samplesPerTurn: 10,
+  /** Profondeur de récursion des volutes : une volute générée fait pousser ses propres volutes plus
+      petites (mêmes règles, appliquées à sa propre courbe), jusqu'à ce niveau de profondeur — la
+      « touffe » de spirales imbriquées visible sur les rinceaux Art nouveau plutôt qu'une volute
+      isolée par embranchement. 0 désactive la récursion. La décroissance géométrique du rayon
+      (`sizeDecay`) fait naturellement diminuer la longueur d'arc de chaque niveau, donc une volute
+      déjà petite n'a souvent pas assez de longueur pour produire elle-même un point d'accroche
+      (voir `spacing`/`marginFraction`) — la récursion s'arrête d'elle-même avant cette profondeur
+      dans la plupart des cas. */
+  recursionDepth: 2,
 };
