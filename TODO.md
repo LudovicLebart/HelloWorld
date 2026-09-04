@@ -113,6 +113,34 @@ décroissance géométrique).
       Prototype volontairement figé (constantes `AUTO_BRANCH`, pas de réglages dédiés
       ni de remplacement d'un lot déjà généré) — à affiner une fois la direction
       validée à l'usage.
+- [x] Côté (gauche/droite) d'une volute dérivé de la courbure locale de la tige plutôt
+      que d'une alternance mécanique — toujours le côté convexe d'un virage, jamais le
+      creux, même principe qu'en art du bonsaï (`localCurvature()` dans
+      `core/branching.ts`) — voir
+      [7e principe](docs/explanation/principes-esthetiques.md#lart-du-bonsaï-jamais-une-branche-vers-le-creux).
+
+Pistes identifiées à partir d'un moodboard de références (volutes Art nouveau/rinceau,
+voir la conversation du 2026-09-04) — non planifiées dans un ordre précis, à trier
+quand on y revient :
+
+- [ ] Volutes récursives : une volute générée fait pousser sa propre volute plus
+      petite (en cascade, profondeur limitée) plutôt qu'une volute isolée par point
+      d'accroche — explique la « touffe » dense de spirales imbriquées visible dans la
+      plupart des références (contrairement à notre unique spirale isolée par
+      embranchement). S'appuierait sur `core/branching.ts` existant : appel récursif
+      sur la courbe de la branche nouvellement créée, avec décroissance de taille et
+      profondeur plafonnée.
+- [ ] Spirales plus serrées : 2 à 3 tours plutôt que les 1,6 actuels
+      (`AUTO_BRANCH.turns`/`growthRate`) — simple réglage de constantes, pas de
+      changement structurel.
+- [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
+      qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
+      aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
+      découplé aujourd'hui de `core/branching.ts`.
+- [ ] Épaisseur de trait variable dans une volute (plus épais à l'attache, effilé
+      vers le centre du coil) — effet calligraphique observé sur plusieurs références ;
+      touche au profil d'épaisseur de la tige (`core/stem.ts`), aujourd'hui uniforme le
+      long d'une branche générée.
 
 ## Hors-scope pour l'instant
 
