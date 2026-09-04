@@ -56,6 +56,14 @@ for (const motif of MOTIFS) {
   motifListEl.appendChild(buildMotifRow(motif));
 }
 
+// Mode focus volutes : le panneau Motifs est masqué (voir index.html), donc aucune interaction
+// n'est possible pour décocher un motif — on démarre sans aucun motif actif (silhouette pure,
+// visée : planche 5 du moodboard). currentSequence()/placeBrush() traitent désormais "aucun motif
+// actif" comme un état légitime plutôt qu'un repli sur le premier motif.
+for (const li of motifRows(motifListEl)) {
+  li.querySelector<HTMLInputElement>(".motif-active")!.checked = false;
+}
+
 type Mode = "freehand" | "points" | "mask";
 
 interface VineState {
@@ -92,12 +100,11 @@ function currentEpsilon(): number {
   return max - (density / 100) * (max - min);
 }
 
-/** Lit la séquence de motifs dans l'ordre actuel du DOM (#motif-list) — un clic sur ↑/↓ réordonne les <li>, l'ordre du DOM fait foi. Chaque motif actif garde sa propre échelle/jitter. */
+/** Lit la séquence de motifs dans l'ordre actuel du DOM (#motif-list) — un clic sur ↑/↓ réordonne les <li>, l'ordre du DOM fait foi. Chaque motif actif garde sa propre échelle/jitter. Aucune case cochée est un état légitime (silhouette sans feuillage, voir placeBrush()) — pas de repli sur la première rangée. */
 function currentSequence(): MotifSequenceEntry[] {
   const rows = motifRows(motifListEl);
   const active = rows.filter((li) => li.querySelector<HTMLInputElement>(".motif-active")!.checked);
-  const chosen = active.length > 0 ? active : rows.slice(0, 1);
-  return chosen.map((li) => ({
+  return active.map((li) => ({
     motifId: li.dataset.motif!,
     scale: Number(li.querySelector<HTMLInputElement>(".motif-scale")!.value),
     jitter: Number(li.querySelector<HTMLInputElement>(".motif-jitter")!.value) / 100,

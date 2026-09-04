@@ -162,6 +162,15 @@ quand on y revient :
       Points/Masque, séquenceur de motifs et curseur Espacement masqués pour laisser
       la place au dessin ; gardés visibles : Densité, Épaisseur tige, Volutes auto (+
       curseurs), Annuler/Rétablir, Effacer, Exporter SVG.
+- [x] Galerie moodboard sauvegardée en Artifact (« Planches Volutes », 9 planches
+      numérotées) — sert de guide pour caler les prochains réglages. Planche 5 (trait
+      calligraphique pur, sans feuillage, quelques grandes boucles ouvertes) prise
+      comme première cible : `AUTO_BRANCH.spacing` 90→160, `startRadiusFactor` 3.5→5,
+      `recursionDepth` 2→0 (moins de volutes, plus grandes, sans imbrication) ; aucun
+      motif actif par défaut (`core/brush.ts` et `main.ts` traitent désormais une
+      séquence vide comme un état légitime, plus un repli défensif sur un motif par
+      défaut). Planche 3 (vrille fine + feuilles groupées par paires) est la prochaine
+      cible.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),

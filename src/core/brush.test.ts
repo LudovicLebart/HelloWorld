@@ -37,10 +37,9 @@ describe("placeBrush", () => {
     expect(central.scale).toBeCloseTo(20, 0);
   });
 
-  it("séquence vide -> repli sur un motif par défaut, ne plante pas", () => {
+  it("séquence vide -> aucun placement, ne plante pas", () => {
     const placements = placeBrush(straightCurve, { spacing: 40, sequence: [] });
-    expect(placements.length).toBeGreaterThan(0);
-    expect(placements[0].motifId).toBe("leaf");
+    expect(placements).toEqual([]);
   });
 
   it("taperStart=false : le tout premier placement n'est pas amenuisé à zéro", () => {

@@ -46,19 +46,16 @@ function sampleAtArcLength(curve: CurveSample[], arcLength: number, fromIndex: n
  * décide, à chaque étape, où et comment placer une instance du motif :
  * échelle dégressive vers les extrémités (le profil suit celui de la tige),
  * alternance gauche/droite le long de la tangente, et jitter pour casser
- * l'effet "tampon".
+ * l'effet "tampon". Une séquence vide (aucun motif actif) est un état légitime — pas de
+ * repli, aucun placement produit (voir le mode "focus volutes" de main.ts, qui vise
+ * une silhouette pure sans feuillage).
  */
-/** Repli si la séquence est vide (tous les motifs désactivés) — ne devrait normalement pas se produire, l'UI garde toujours au moins un motif actif. */
-const FALLBACK_ENTRY: MotifSequenceEntry = { motifId: "leaf", scale: 16, jitter: 0.2 };
-
 export function placeBrush(curve: CurveSample[], opts: BrushOptions): BrushPlacement[] {
-  if (curve.length < 2) return [];
+  if (curve.length < 2 || opts.sequence.length === 0) return [];
 
-  const { spacing } = opts;
+  const { spacing, sequence } = opts;
   const baseAngleRad = ((opts.baseAngleDeg ?? 55) * Math.PI) / 180;
   const total = curve[curve.length - 1].arcLength;
-
-  const sequence = opts.sequence.length > 0 ? opts.sequence : [FALLBACK_ENTRY];
 
   const placements: BrushPlacement[] = [];
   let side = 1;

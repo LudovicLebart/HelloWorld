@@ -6,6 +6,12 @@ secondaires en forme de volute, générées algorithmiquement — voir
 les principes (spirale logarithmique, rinceau, phyllotaxie) dont les règles
 appliquées sont issues.
 
+Les réglages par défaut sont actuellement calibrés sur la planche 5 de la galerie
+« Planches Volutes » (moodboard publié en Artifact — trait calligraphique pur, sans
+feuillage, quelques grandes boucles ouvertes) : peu de volutes, plus grandes,
+sans récursion, et aucun motif actif au démarrage. La planche 3 (vrille fine + feuilles
+groupées par paires) est la prochaine cible envisagée.
+
 ## Utilisation
 
 Tracez une ligne : dès que le tracé se termine, des branches en forme de volute
@@ -39,6 +45,14 @@ sur cette liane plutôt que de l'ajouter par-dessus.
 
 Un tracé et ses volutes forment un seul pas d'annulation — un Ctrl+Z (ou clic sur
 **Annuler**) les retire tous en même temps.
+
+## Pas de motif par défaut
+
+Le panneau Motifs étant masqué (voir plus bas), aucun motif n'est actif au démarrage :
+la liane générée est une silhouette pure (tige + volutes), sans feuille ni fleur ni
+baie. C'est un état normal — `placeBrush()` (`core/brush.ts`) et `currentSequence()`
+(`main.ts`) traitent une séquence vide comme « pas de motif », pas comme un repli à
+corriger.
 
 ## Ce qui reste fixe
 

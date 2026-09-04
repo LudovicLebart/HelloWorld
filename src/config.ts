@@ -43,8 +43,10 @@ export const MOTIF_JITTER_RANGE = { min: 0, max: 100 };
     principes (rinceau classique, phyllotaxie, spirale logarithmique) dont ces valeurs découlent. */
 export const AUTO_BRANCH = {
   /** Distance (px, longueur d'arc) visée entre deux points d'accroche — la densité réelle suit la
-      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). */
-  spacing: 90,
+      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Relevé à 160 (au
+      lieu de 90) pour calibrer sur la planche 5 du moodboard (peu de boucles, largement espacées) —
+      voir docs/how-to/generer-des-volutes-automatiquement.md. */
+  spacing: 160,
   /** Fraction de la longueur totale laissée nue à chaque extrémité — jamais de volute exactement à
       la racine ou à la pointe de la tige. */
   marginFraction: 0.08,
@@ -55,8 +57,9 @@ export const AUTO_BRANCH = {
       complet (contre ~39 % à l'ancienne valeur de 0.15) : une spirale nettement plus ouverte,
       aux boucles distinctes plutôt qu'une pelote serrée. */
   growthRate: 0.07,
-  /** Rayon de départ de la première volute, en multiple de l'épaisseur de la tige parente. */
-  startRadiusFactor: 3.5,
+  /** Rayon de départ de la première volute, en multiple de l'épaisseur de la tige parente. Relevé
+      à 5 (au lieu de 3.5) pour des boucles plus grandes et affirmées, calibrage planche 5. */
+  startRadiusFactor: 5,
   /** Facteur de décroissance géométrique du rayon de départ appliqué à chaque volute suivante le
       long de la tige (rinceau classique : chaque volute plus petite que la précédente). */
   sizeDecay: 0.85,
@@ -68,10 +71,11 @@ export const AUTO_BRANCH = {
   /** Profondeur de récursion des volutes : une volute générée fait pousser ses propres volutes plus
       petites (mêmes règles, appliquées à sa propre courbe), jusqu'à ce niveau de profondeur — la
       « touffe » de spirales imbriquées visible sur les rinceaux Art nouveau plutôt qu'une volute
-      isolée par embranchement. 0 désactive la récursion. La décroissance géométrique du rayon
-      (`sizeDecay`) fait naturellement diminuer la longueur d'arc de chaque niveau, donc une volute
-      déjà petite n'a souvent pas assez de longueur pour produire elle-même un point d'accroche
-      (voir `spacing`/`marginFraction`) — la récursion s'arrête d'elle-même avant cette profondeur
-      dans la plupart des cas. */
-  recursionDepth: 2,
+      isolée par embranchement. 0 désactive la récursion — valeur actuelle, calibrage planche 5 (pas
+      de volutes visiblement imbriquées les unes dans les autres, juste des boucles simples). La
+      décroissance géométrique du rayon (`sizeDecay`) fait naturellement diminuer la longueur d'arc
+      de chaque niveau si la récursion est réactivée, donc une volute déjà petite n'a souvent pas
+      assez de longueur pour produire elle-même un point d'accroche (voir `spacing`/`marginFraction`)
+      — la récursion s'arrête d'elle-même avant la profondeur réglée dans la plupart des cas. */
+  recursionDepth: 0,
 };
