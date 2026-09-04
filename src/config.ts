@@ -63,4 +63,12 @@ export const AUTO_BRANCH = {
   launchAngle: Math.PI / 2.4,
   /** Échantillons par tour de spirale. */
   samplesPerTurn: 10,
+  /** Fenêtre (en échantillons de courbe, de part et d'autre du point d'accroche) utilisée pour
+      estimer le sens de courbure local de la tige — détermine le côté choisi (voir
+      `curvatureThreshold`). Une fenêtre trop étroite est sensible au bruit d'un tracé à main levée. */
+  curvatureWindow: 6,
+  /** Sous ce seuil (produit vectoriel des tangentes avant/après), la tige est considérée localement
+      droite : le côté retombe sur une simple alternance plutôt que sur la courbure (indéfinie sur un
+      segment droit). */
+  curvatureThreshold: 1e-3,
 };

@@ -2,9 +2,22 @@ import { describe, expect, it } from "vitest";
 import { planAutoBranches, buildAutoBranchPoints } from "./branching";
 import { buildCurveFromNodes, autoHandles } from "./spline";
 import { AUTO_BRANCH } from "../config";
+import type { Point } from "./types";
 
 function straightCurve(length: number) {
   return buildCurveFromNodes(autoHandles([{ x: 0, y: 0 }, { x: length, y: 0 }]));
+}
+
+/** Nœuds de contrôle sur un arc de cercle (courbure constante, un seul sens) — pour tester le choix
+    du côté convexe/concave indépendamment de tout bruit de tracé à main levée. */
+function arcNodes(center: Point, radius: number, fromDeg: number, toDeg: number, count: number): Point[] {
+  const nodes: Point[] = [];
+  for (let i = 0; i < count; i++) {
+    const deg = fromDeg + ((toDeg - fromDeg) * i) / (count - 1);
+    const rad = (deg * Math.PI) / 180;
+    nodes.push({ x: center.x + radius * Math.cos(rad), y: center.y + radius * Math.sin(rad) });
+  }
+  return nodes;
 }
 
 describe("planAutoBranches", () => {
@@ -36,6 +49,35 @@ describe("planAutoBranches", () => {
     for (const p of plans) {
       expect(p.point.x).toBeGreaterThan(0);
       expect(p.point.x).toBeLessThan(total);
+    }
+  });
+
+  it("sur un virage à courbure constante, tous les points d'accroche choisissent le même côté (convexe)", () => {
+    const center = { x: 0, y: 0 };
+    const radius = 400;
+    // Arc assez long pour produire plusieurs points d'accroche (spacing = 90px).
+    const nodes = autoHandles(arcNodes(center, radius, 200, 340, 24));
+    const curve = buildCurveFromNodes(nodes);
+    const plans = planAutoBranches(curve);
+    expect(plans.length).toBeGreaterThan(2);
+    const sides = new Set(plans.map((p) => p.side));
+    expect(sides.size).toBe(1);
+  });
+
+  it("le côté choisi est le côté convexe : la branche s'éloigne du centre de courbure, jamais vers le creux", () => {
+    const center = { x: 0, y: 0 };
+    const radius = 400;
+    const nodes = autoHandles(arcNodes(center, radius, 200, 340, 24));
+    const curve = buildCurveFromNodes(nodes);
+    const plans = planAutoBranches(curve);
+    for (const attachment of plans) {
+      const points = buildAutoBranchPoints(attachment, 5, 0);
+      const distAttachment = Math.hypot(attachment.point.x - center.x, attachment.point.y - center.y);
+      // Un point pris un peu plus loin sur la volute (pas le tout premier, qui coïncide avec
+      // l'accroche) : doit s'être éloigné du centre de l'arc, pas rapproché (vers le creux).
+      const further = points[Math.min(3, points.length - 1)];
+      const distFurther = Math.hypot(further.x - center.x, further.y - center.y);
+      expect(distFurther).toBeGreaterThan(distAttachment);
     }
   });
 });

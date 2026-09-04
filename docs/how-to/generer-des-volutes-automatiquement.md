@@ -10,9 +10,13 @@ appliquées sont issues.
 
 Sélectionnez une liane (tap sur sa tige) puis cliquez sur **Volutes auto**. Des
 branches en forme de volute apparaissent le long de la tige sélectionnée, chacune
-raccordée par une tangente, en alternance gauche/droite, décroissant en taille à
-mesure qu'on avance le long de la tige. Chaque branche est une liane comme une autre :
-éditable nœud par nœud, exportable, habillable par le séquenceur de motifs.
+raccordée par une tangente, décroissant en taille à mesure qu'on avance le long de la
+tige. Le côté (gauche/droite) de chaque branche suit le sens de courbure de la tige à
+cet endroit — toujours vers l'extérieur d'un virage, jamais vers son creux, comme en
+art du bonsaï (voir [Ce qui rend une arabesque gracieuse](../explanation/principes-esthetiques.md#lart-du-bonsaï-jamais-une-branche-vers-le-creux)) ;
+sur un tronçon localement droit, où cette notion n'a pas de sens, les côtés alternent
+simplement. Chaque branche est une liane comme une autre : éditable nœud par nœud,
+exportable, habillable par le séquenceur de motifs.
 
 Un seul clic sur **Volutes auto** peut créer plusieurs branches d'un coup — un seul
 Ctrl+Z (ou clic sur **Annuler**) les retire toutes en même temps.

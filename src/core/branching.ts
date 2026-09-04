@@ -15,22 +15,34 @@ export interface AutoBranchAttachment {
     divergence phyllotactique — voir docs/explanation/principes-esthetiques.md). */
 const GOLDEN_RATIO_CONJUGATE = (Math.sqrt(5) - 1) / 2;
 
-function sampleAt(curve: CurveSample[], t: number): CurveSample {
-  const idx = Math.min(curve.length - 1, Math.max(0, Math.round(t * (curve.length - 1))));
-  return curve[idx];
+/** Sens de courbure local à un échantillon donné : composante z du produit vectoriel entre la
+    tangente `curvatureWindow` échantillons avant et celle `curvatureWindow` échantillons après —
+    positif quand la tige tourne vers son propre `normal` (voir `spline.ts`), négatif quand elle
+    tourne de l'autre côté. Une valeur proche de 0 signale un tronçon localement droit. */
+function localCurvature(curve: CurveSample[], index: number): number {
+  const { curvatureWindow } = AUTO_BRANCH;
+  const before = curve[Math.max(0, index - curvatureWindow)].tangent;
+  const after = curve[Math.min(curve.length - 1, index + curvatureWindow)].tangent;
+  return before.x * after.y - before.y * after.x;
 }
 
 /**
  * Choisit les points d'accroche de branches secondaires le long d'une tige déjà construite : le
  * nombre de points suit la longueur totale (une arabesque ne laisse ni vide ni surcharge, quelle que
  * soit la longueur du tracé), l'espacement de base est régulier mais perturbé par le nombre d'or
- * (jamais un pas mécaniquement identique), et les côtés alternent — voir
- * docs/explanation/principes-esthetiques.md.
+ * (jamais un pas mécaniquement identique) — voir docs/explanation/principes-esthetiques.md.
+ *
+ * Le côté d'accroche suit le sens de courbure local de la tige à cet endroit, jamais une simple
+ * alternance mécanique : une branche se détache toujours du côté convexe (extérieur) d'un virage,
+ * jamais du côté concave (le creux) — même principe qu'en art du bonsaï, où une branche qui pousse
+ * vers l'intérieur d'une courbe du tronc paraît étouffée plutôt que vivante. Sur un tronçon
+ * localement droit (courbure sous `curvatureThreshold`), où cette notion n'a pas de sens, le côté
+ * retombe sur une alternance simple.
  */
 export function planAutoBranches(curve: CurveSample[]): AutoBranchAttachment[] {
   if (curve.length < 2) return [];
   const total = curve[curve.length - 1].arcLength;
-  const { spacing, marginFraction } = AUTO_BRANCH;
+  const { spacing, marginFraction, curvatureThreshold } = AUTO_BRANCH;
   const count = Math.floor(total / spacing);
   if (count < 1) return [];
 
@@ -40,8 +52,11 @@ export function planAutoBranches(curve: CurveSample[]): AutoBranchAttachment[] {
   for (let i = 1; i <= count; i++) {
     const jitter = (((i * GOLDEN_RATIO_CONJUGATE) % 1) - 0.5) * step * 0.6;
     const t = Math.min(1, Math.max(0, marginFraction + step * i + jitter));
-    const sample = sampleAt(curve, t);
-    plans.push({ point: sample.point, tangent: sample.tangent, side: i % 2 === 0 ? 1 : -1 });
+    const idx = Math.min(curve.length - 1, Math.max(0, Math.round(t * (curve.length - 1))));
+    const sample = curve[idx];
+    const curvature = localCurvature(curve, idx);
+    const side = Math.abs(curvature) < curvatureThreshold ? (i % 2 === 0 ? 1 : -1) : curvature > 0 ? -1 : 1;
+    plans.push({ point: sample.point, tangent: sample.tangent, side });
   }
   return plans;
 }
