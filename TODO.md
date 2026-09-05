@@ -269,7 +269,8 @@ quand on y revient :
       moodboard "Planches Volutes" comme cible de calibrage principale. Le motif d'intérêt
       identifié par l'utilisateur : "la PJ lys grande" — le motif de pickguard principal
       (grand format), dont l'entrelacs comporte une fleur de lys/iris le long de la vigne
-      gravée. À ajouter à la galerie Artifact existante (nouvelle planche numérotée) avant de
+      gravée. Ajoutée à la galerie Artifact existante (PL. 10, republiée à la même URL —
+      https://claude.ai/code/artifact/f15240f7-dee2-4e51-a372-8eaae7ed6997) ; reste à faire :
       reprendre le calibrage de l'angle/sens d'enroulement sur cette base plutôt qu'en devinant
       à l'aveugle.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
