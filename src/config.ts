@@ -44,10 +44,15 @@ export const MOTIF_JITTER_RANGE = { min: 0, max: 100 };
     dont ces valeurs découlent. */
 export const AUTO_BRANCH = {
   /** Distance (px, longueur d'arc) visée entre deux points d'accroche — la densité réelle suit la
-      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Relevé à 220 : les
-      volutes étant maintenant beaucoup plus longues (voir `branchLengthFactor`), un espacement
-      trop serré les ferait se chevaucher. */
-  spacing: 220,
+      longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Fortement relevé
+      (220 → 900) : comparée à la planche de référence "Art & Lutherie Canada" (PL. 10, motif de
+      pickguard principal), nos volutes/branches secondaires étaient beaucoup trop fréquentes — la
+      référence n'en montre presque aucune sur toute la longueur de sa tige, l'essentiel du motif
+      étant porté par le feuillage directement attaché à la tige principale (voir core/brush.ts),
+      pas par des branches. Une tige de longueur courante (un tracé qui remplit l'essentiel du
+      canevas) ne produit donc plus qu'une volute isolée, parfois aucune — jamais la demi-douzaine
+      qui dominait visuellement le rendu précédent. */
+  spacing: 900,
   /** Fraction de la longueur totale laissée nue à chaque extrémité — jamais de volute exactement à
       la racine ou à la pointe de la tige. */
   marginFraction: 0.08,

@@ -13,12 +13,18 @@ dernière portion — comme une vraie vrille de vigne, pas un escargot déjà en
 l'attache. Ce comportement vient directement du modèle de courbe (`core/curvatureSpiral.ts`,
 une spirale d'Euler/clothoïde généralisée) plutôt que d'un simple réglage de
 constantes — voir la note dans principes-esthetiques.md sur pourquoi une spirale
-logarithmique classique ne pouvait structurellement pas produire ce profil. Étape
-précédente : planche 3 de la galerie « Planches Volutes » (moodboard publié en
-Artifact — vrille fine, tendeurs fins et nombreux, feuillage clairsemé), elle-même
-après planche 5 (trait calligraphique pur, sans feuillage, quelques grandes boucles
-ouvertes) — toujours atteignables en ajustant les curseurs ci-dessous et en
-décochant/cochant Feuille.
+logarithmique classique ne pouvait structurellement pas produire ce profil.
+
+Les volutes sont maintenant rares plutôt que fréquentes (`AUTO_BRANCH.spacing` relevé
+à 900) : la référence actuelle, planche 10 de la galerie « Planches Volutes » (motif
+de pickguard gravé « Art & Lutherie Canada », moodboard publié en Artifact), n'en
+montre presque aucune sur toute la longueur de sa tige — l'essentiel du motif y est
+porté par le feuillage directement attaché à la tige principale, pas par des
+branches. Un tracé qui remplit l'essentiel du canevas ne produit donc plus qu'une
+volute isolée, parfois aucune. Étapes précédentes : planche 3 (vrille fine, tendeurs
+fins et nombreux, feuillage clairsemé), elle-même après planche 5 (trait
+calligraphique pur, sans feuillage, quelques grandes boucles ouvertes) — toujours
+atteignables en ajustant les curseurs ci-dessous et en décochant/cochant Feuille.
 
 ## Utilisation
 

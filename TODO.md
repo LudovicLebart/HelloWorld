@@ -264,15 +264,24 @@ quand on y revient :
       `false` inconditionnellement : plus de distinction racine/branche, aucune liane ne
       s'effile jamais à son point de départ. Vérifié visuellement (base pleine largeur,
       pointe effilée, sur la tige principale comme sur les volutes).
-- [ ] Nouvelle image de référence : planche de conception "Art & Lutherie Canada" (motif de
+- [x] Nouvelle image de référence : planche de conception "Art & Lutherie Canada" (motif de
       pickguard principal gravé or sur noyer, plus détails pont/médaillon) — remplace le
-      moodboard "Planches Volutes" comme cible de calibrage principale. Le motif d'intérêt
-      identifié par l'utilisateur : "la PJ lys grande" — le motif de pickguard principal
-      (grand format), dont l'entrelacs comporte une fleur de lys/iris le long de la vigne
-      gravée. Ajoutée à la galerie Artifact existante (PL. 10, republiée à la même URL —
-      https://claude.ai/code/artifact/f15240f7-dee2-4e51-a372-8eaae7ed6997) ; reste à faire :
-      reprendre le calibrage de l'angle/sens d'enroulement sur cette base plutôt qu'en devinant
-      à l'aveugle.
+      moodboard "Planches Volutes" comme cible de calibrage principale, motif d'intérêt : le
+      pickguard principal (grand format, "PJ" = pickguard). Ajoutée à la galerie Artifact
+      existante (PL. 10, republiée à la même URL —
+      https://claude.ai/code/artifact/f15240f7-dee2-4e51-a372-8eaae7ed6997).
+- [x] Comparaison visuelle vs planche 10 : le motif de référence ne montre presque aucune
+      branche secondaire (volute) sur toute la longueur de sa tige — l'essentiel du motif y est
+      porté par le feuillage directement attaché à la tige principale (`core/brush.ts`), pas
+      par des branches générées (`core/branching.ts`). Écart le plus flagrant identifié : nos
+      volutes étaient beaucoup trop fréquentes (4-6 sur un tracé courant) et dominaient
+      visuellement la composition. Sur demande explicite de netravailler qu'un seul élément à
+      la fois : `AUTO_BRANCH.spacing` relevé de 220 à 900 — un tracé qui remplit l'essentiel du
+      canevas ne produit plus qu'une volute isolée, parfois aucune, comme sur la référence.
+      Vérifié visuellement sur un tracé long (une volute) et un tracé court (aucune volute).
+      Écarts non traités dans ce tour (délibérément, un seul élément à la fois) : densité et
+      forme des feuilles (plus fines/allongées sur la référence, motif porté par pétiole plutôt
+      que par branche), présence d'un point de branchement terminal (motif arbre/logo).
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
