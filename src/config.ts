@@ -84,8 +84,10 @@ export const AUTO_BRANCH = {
       et proportionnellement plus resserrée). */
   sizeDecay: 0.85,
   /** Angle (radians) entre la tangente de la tige parente et la tangente de départ d'une volute —
-      jamais un raccord tout droit. */
-  launchAngle: Math.PI / 2.4,
+      jamais un raccord tout droit. Réduit (75° → 60°) : à 75°, le départ semblait quasiment
+      perpendiculaire à la tige (retour utilisateur) — dans la nature, l'angle de séparation d'une
+      vrille ou d'un rameau secondaire est plutôt de l'ordre de 45-70°. */
+  launchAngle: Math.PI / 3,
   /** Pas de l'intégration numérique de la courbe (méthode du point milieu) — remplace
       `samplesPerTurn`, qui n'a plus de sens puisqu'il n'y a plus de tours fixés d'avance. */
   curveSteps: 60,

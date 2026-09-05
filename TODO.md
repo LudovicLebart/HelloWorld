@@ -237,6 +237,21 @@ quand on y revient :
       s'ouvre en un coil net plutôt qu'un petit nœud très serré. Vérifié visuellement :
       geste initial nettement plus court, transition progressive vers un coil ouvert plutôt
       qu'un resserrement brutal en fin de parcours.
+- [x] Angle de séparation et sens d'enroulement : retour utilisateur — l'angle de départ
+      (`launchAngle`) semblait quasiment perpendiculaire à la tige (75°), alors que dans la
+      nature une vrille ou un rameau secondaire se sépare plutôt à 45-70° ; réduit à 60°
+      (`Math.PI / 2.4` → `Math.PI / 3`). Sens d'enroulement inversé : le coil se recourbait
+      vers l'arrière, en direction de la racine de la tige, plutôt que de sembler "chercher
+      à aller vers l'extérieur" (retour utilisateur). Cause : `buildAutoBranchPoints()`
+      (`core/branching.ts`) faisait tourner la volute dans le MÊME sens que son premier
+      écart par rapport à la tangente parente (`clockwise: attachment.side === -1`) —
+      prolonger cet écart la fait recourber vers la racine. Inversé (`attachment.side ===
+      1`) : la volute tourne dans le sens OPPOSÉ à son premier écart, donc le coil se
+      referme du côté où la tige continue de croître plutôt que vers sa racine. Vérifié par
+      une exploration géométrique dédiée (4 combinaisons angle/sens rendues en SVG
+      statique, tige de repère dessinée en gris) avant application dans le vrai modèle,
+      puis confirmé visuellement dans l'app : volutes qui s'écartent en diagonale nette et
+      s'enroulent vers l'avant plutôt que de replier sur la tige.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),

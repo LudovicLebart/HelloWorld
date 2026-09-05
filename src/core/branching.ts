@@ -63,6 +63,15 @@ export type AutoBranchShapeOverrides = Partial<
  * la volute reste proportionnée à l'épaisseur de la tige qui la porte. `overrides` remplace
  * ponctuellement `branchLengthFactor`/`endCurvatureFactor`/`curvatureExponent`/`sizeDecay` sans
  * toucher aux valeurs par défaut de `AUTO_BRANCH`.
+ *
+ * Le sens d'enroulement (`clockwise`) est à l'opposé du côté d'accroche (`attachment.side === 1`,
+ * pas `=== -1`) : après avoir divergé de la tige parente de `launchAngle`, la volute continue de
+ * tourner dans le sens OPPOSÉ à ce premier écart plutôt que de le prolonger. Prolonger l'écart
+ * (l'ancien comportement) fait recourber la volute vers l'arrière, en direction de la racine de la
+ * tige — retour utilisateur : "comme si elle cherchait à aller vers l'extérieur" est le sens
+ * inverse. Vérifié géométriquement (voir la dérivation dans l'historique de calibrage,
+ * TODO.md) : avec ce signe, le coil se referme du côté opposé à la racine, vers où la tige
+ * continue de croître.
  */
 export function buildAutoBranchPoints(
   attachment: AutoBranchAttachment,
@@ -80,7 +89,7 @@ export function buildAutoBranchPoints(
     endCurvature,
     curvatureExponent,
     steps: curveSteps,
-    clockwise: attachment.side === -1,
+    clockwise: attachment.side === 1,
   });
 
   const mainAngle = Math.atan2(attachment.tangent.y, attachment.tangent.x);
