@@ -252,6 +252,26 @@ quand on y revient :
       statique, tige de repère dessinée en gris) avant application dans le vrai modèle,
       puis confirmé visuellement dans l'app : volutes qui s'écartent en diagonale nette et
       s'enroulent vers l'avant plutôt que de replier sur la tige.
+      **Rejeté par l'utilisateur** ("non pas du tout") juste après déploiement — voir l'item
+      suivant pour la suite (nouvelle image de référence, sens d'enroulement encore à revoir).
+- [x] Base de la tige jamais effilée (forme triangle, pas fuseau) : `liveParams()`
+      (`main.ts`) fixait `taperStart: !parentId` — la tige principale (sans parent) s'effilait
+      donc à SA PROPRE base (le tout premier point tracé), en plus de sa pointe, un fuseau à
+      deux pointes plutôt qu'un triangle. Une vraie tige de plante reste pleine largeur à la
+      base (elle émerge du sol) et ne s'effile que vers sa pointe — même principe déjà
+      appliqué à la racine d'une branche (`taperStart: false` quand `parentId` est défini,
+      pour qu'elle s'enfonce pleine largeur dans sa tige parente). `taperStart` passe à
+      `false` inconditionnellement : plus de distinction racine/branche, aucune liane ne
+      s'effile jamais à son point de départ. Vérifié visuellement (base pleine largeur,
+      pointe effilée, sur la tige principale comme sur les volutes).
+- [ ] Nouvelle image de référence : planche de conception "Art & Lutherie Canada" (motif de
+      pickguard principal gravé or sur noyer, plus détails pont/médaillon) — remplace le
+      moodboard "Planches Volutes" comme cible de calibrage principale. Le motif d'intérêt
+      identifié par l'utilisateur : "la PJ lys grande" — le motif de pickguard principal
+      (grand format), dont l'entrelacs comporte une fleur de lys/iris le long de la vigne
+      gravée. À ajouter à la galerie Artifact existante (nouvelle planche numérotée) avant de
+      reprendre le calibrage de l'angle/sens d'enroulement sur cette base plutôt qu'en devinant
+      à l'aveugle.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
