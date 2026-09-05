@@ -3,21 +3,22 @@
 Tracer une ligne (à main levée, en mode Libre) l'habille automatiquement de branches
 secondaires en forme de volute, générées algorithmiquement — voir
 [Ce qui rend une arabesque gracieuse](../explanation/principes-esthetiques.md) pour
-les principes (spirale logarithmique, rinceau, phyllotaxie) dont les règles
-appliquées sont issues.
+les principes (courbure croissante en fonction de la longueur d'arc, rinceau,
+phyllotaxie) dont les règles appliquées sont issues.
 
-Les réglages par défaut ont depuis été recalibrés : les volutes sont maintenant plus
-fines (voir **Épaisseur** plus bas) et beaucoup plus longues, avec une courbure
-progressive — un grand arc ouvert, presque droit à l'attache, qui se resserre de plus
+Les volutes sont fines (voir **Épaisseur** plus bas), longues, et suivent une courbure
+progressive : un grand arc ouvert, presque droit à l'attache, qui se resserre de plus
 en plus, la rotation serrée sur elle-même n'intervenant que tard, sur la toute
-dernière portion. Avant ce recalibrage, les volutes étaient de simples spirales
-logarithmiques auto-similaires : la courbure y croissait au même rythme relatif à
-chaque tour, ce qui leur donnait l'aspect d'un "escargot" dès l'attache plutôt que
-celui d'une branche qui s'incurve. Étape précédente : planche 3 de la galerie
-« Planches Volutes » (moodboard publié en Artifact — vrille fine, tendeurs fins et
-nombreux, feuillage clairsemé), elle-même après planche 5 (trait calligraphique pur,
-sans feuillage, quelques grandes boucles ouvertes) — toujours atteignables en ajustant
-les curseurs ci-dessous et en décochant/cochant Feuille.
+dernière portion — comme une vraie vrille de vigne, pas un escargot déjà enroulé dès
+l'attache. Ce comportement vient directement du modèle de courbe (`core/curvatureSpiral.ts`,
+une spirale d'Euler/clothoïde généralisée) plutôt que d'un simple réglage de
+constantes — voir la note dans principes-esthetiques.md sur pourquoi une spirale
+logarithmique classique ne pouvait structurellement pas produire ce profil. Étape
+précédente : planche 3 de la galerie « Planches Volutes » (moodboard publié en
+Artifact — vrille fine, tendeurs fins et nombreux, feuillage clairsemé), elle-même
+après planche 5 (trait calligraphique pur, sans feuillage, quelques grandes boucles
+ouvertes) — toujours atteignables en ajustant les curseurs ci-dessous et en
+décochant/cochant Feuille.
 
 ## Utilisation
 
@@ -28,16 +29,20 @@ clic supplémentaire nécessaire. Cinq curseurs, à côté du bouton **Volutes a
 ajustent leur forme **en direct** : bouger l'un d'eux régénère aussitôt les volutes de
 la liane sélectionnée, sans avoir à recliquer sur un bouton.
 
-- **Tours** — nombre de tours de chaque volute.
-- **Resserrement** — vitesse à laquelle la spirale se referme sur son centre ; plus
-  bas donne des boucles ouvertes et bien distinctes, plus haut une pelote plus serrée.
-  Combiné à la répartition de la courbure (constante `AUTO_BRANCH.curvatureRampPower`,
-  non exposée en curseur — voir plus bas), ce resserrement reste concentré sur la
-  toute dernière portion du parcours plutôt que réparti uniformément sur les **Tours**.
-- **Taille de départ** — rayon de la première volute, en multiple de l'épaisseur de
-  la tige qui la porte (curseur **Épaisseur tige**).
+- **Longueur** — longueur d'arc totale de la première volute, en multiple de
+  l'épaisseur de la tige qui la porte (curseur **Épaisseur tige**). Le nombre de
+  tours visuels n'est plus un cadran à part : il résulte de la combinaison
+  **Longueur**/**Resserrement**/**Progressivité**.
+- **Resserrement** — courbure atteinte à la pointe de la volute ; plus haut donne une
+  pointe qui s'enroule plus serré.
+- **Progressivité** — à quel point la montée en courbure est retardée vers la fin du
+  parcours plutôt qu'étalée uniformément sur toute la longueur. Bas (proche de 1),
+  c'est une clothoïde classique (courbure qui croît régulièrement dès le départ) ;
+  haut, l'essentiel de la longueur reste presque droite et la rotation serrée
+  n'intervient que sur la toute dernière portion.
 - **Décroissance** — à quel point chaque volute suivante (le long de la tige, ou
-  récursivement à l'intérieur d'une volute) est plus petite que la précédente.
+  récursivement à l'intérieur d'une volute) est plus petite — et proportionnellement
+  plus resserrée — que la précédente.
 - **Récursion** — chaque volute générée fait à son tour pousser ses propres volutes,
   plus petites, selon les mêmes règles, jusqu'à ce nombre de niveaux — la « touffe » de
   spirales imbriquées des rinceaux Art nouveau plutôt qu'une volute isolée par
@@ -71,15 +76,14 @@ modifier `main.ts` tant que le panneau reste masqué.
 Une volute auto-générée est rendue avec une tige plus fine que celle qui la porte
 (`AUTO_BRANCH.stemWidthFactor`, actuellement 0.4 — c'est-à-dire 40 % de l'épaisseur du
 curseur **Épaisseur tige**) : une ramification, pas le même trait plein que la tige
-principale. Ce facteur n'affecte que le rendu — le rayon de la spirale elle-même
+principale. Ce facteur n'affecte que le rendu — la courbure de la spirale elle-même
 continue de se baser sur l'épaisseur de la tige racine non réduite, pour que la taille
 des volutes ne décroisse pas deux fois le long d'une même tige.
 
 ## Ce qui reste fixe
 
 L'espacement entre points d'accroche, la marge aux extrémités de la tige, l'angle de
-raccord, la finesse d'échantillonnage de chaque spirale et la répartition de la
-courbure le long du parcours (`curvatureRampPower` — voir plus haut) restent des
+raccord et le pas d'intégration numérique de chaque volute (`curveSteps`) restent des
 constantes fixes (`AUTO_BRANCH` dans `src/config.ts`) — moins déterminantes pour
 l'aspect général que les cinq curseurs ci-dessus, exposables plus tard si besoin.
 

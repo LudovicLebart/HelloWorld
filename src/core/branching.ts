@@ -1,5 +1,5 @@
 import type { CurveSample, Point } from "./types";
-import { sampleLogSpiral } from "./logSpiral";
+import { sampleCurvatureSpiral } from "./curvatureSpiral";
 import { AUTO_BRANCH } from "../config";
 
 export interface AutoBranchAttachment {
@@ -48,17 +48,21 @@ function rotate(p: Point, cos: number, sin: number): Point {
 
 /** Sous-ensemble de `AUTO_BRANCH` réglable en direct (curseurs de la barre d'outils, voir
     `autoBranchParams()` dans main.ts) plutôt que figé à sa valeur par défaut. */
-export type AutoBranchShapeOverrides = Partial<Pick<typeof AUTO_BRANCH, "turns" | "growthRate" | "startRadiusFactor" | "sizeDecay">>;
+export type AutoBranchShapeOverrides = Partial<
+  Pick<typeof AUTO_BRANCH, "branchLengthFactor" | "endCurvatureFactor" | "curvatureExponent" | "sizeDecay">
+>;
 
 /**
  * Construit les points bruts (repère du canevas) d'une volute générée automatiquement à un point
  * d'accroche : raccord à un angle fixe par rapport à la tangente de la tige parente (jamais un
  * prolongement tout droit — `launchAngle`), sens d'enroulement selon le côté d'accroche, et taille
  * décroissant géométriquement à mesure que `generationIndex` avance le long de la tige (rinceau
- * classique : chaque volute plus petite que la précédente). `stemWidth` sert d'échelle de référence
- * pour que la volute reste proportionnée à l'épaisseur de la tige qui la porte. `overrides` remplace
- * ponctuellement `turns`/`growthRate`/`startRadiusFactor`/`sizeDecay` sans toucher aux valeurs par
- * défaut de `AUTO_BRANCH` — absent, le comportement est identique à avant l'ajout des curseurs.
+ * classique : chaque volute plus petite que la précédente, et proportionnellement plus resserrée —
+ * `sizeDecay` réduit `length` et resserre `endCurvature` d'un même facteur, une homothétie
+ * cohérente plutôt qu'un simple raccourcissement). `stemWidth` sert d'échelle de référence pour que
+ * la volute reste proportionnée à l'épaisseur de la tige qui la porte. `overrides` remplace
+ * ponctuellement `branchLengthFactor`/`endCurvatureFactor`/`curvatureExponent`/`sizeDecay` sans
+ * toucher aux valeurs par défaut de `AUTO_BRANCH`.
  */
 export function buildAutoBranchPoints(
   attachment: AutoBranchAttachment,
@@ -66,16 +70,17 @@ export function buildAutoBranchPoints(
   generationIndex: number,
   overrides?: AutoBranchShapeOverrides,
 ): Point[] {
-  const { launchAngle, samplesPerTurn, curvatureRampPower } = AUTO_BRANCH;
-  const { turns, growthRate, startRadiusFactor, sizeDecay } = { ...AUTO_BRANCH, ...overrides };
-  const startRadius = stemWidth * startRadiusFactor * Math.pow(sizeDecay, generationIndex);
-  const spiral = sampleLogSpiral({
-    turns,
-    growthRate,
-    startRadius,
-    samplesPerTurn,
+  const { launchAngle, curveSteps } = AUTO_BRANCH;
+  const { branchLengthFactor, endCurvatureFactor, curvatureExponent, sizeDecay } = { ...AUTO_BRANCH, ...overrides };
+  const decay = Math.pow(sizeDecay, generationIndex);
+  const length = stemWidth * branchLengthFactor * decay;
+  const endCurvature = endCurvatureFactor / (stemWidth * decay);
+  const spiral = sampleCurvatureSpiral({
+    length,
+    endCurvature,
+    curvatureExponent,
+    steps: curveSteps,
     clockwise: attachment.side === -1,
-    curvatureRampPower,
   });
 
   const mainAngle = Math.atan2(attachment.tangent.y, attachment.tangent.x);

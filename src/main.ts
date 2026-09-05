@@ -42,9 +42,9 @@ const modeFreehandButton = document.querySelector<HTMLButtonElement>("#mode-free
 const modePointsButton = document.querySelector<HTMLButtonElement>("#mode-points")!;
 const modeMaskButton = document.querySelector<HTMLButtonElement>("#mode-mask")!;
 const autoBranchButton = document.querySelector<HTMLButtonElement>("#auto-branch")!;
-const autoBranchTurnsInput = document.querySelector<HTMLInputElement>("#auto-branch-turns")!;
+const autoBranchLengthInput = document.querySelector<HTMLInputElement>("#auto-branch-length")!;
 const autoBranchGrowthRateInput = document.querySelector<HTMLInputElement>("#auto-branch-growth-rate")!;
-const autoBranchStartRadiusInput = document.querySelector<HTMLInputElement>("#auto-branch-start-radius")!;
+const autoBranchCurvatureExponentInput = document.querySelector<HTMLInputElement>("#auto-branch-curvature-exponent")!;
 const autoBranchSizeDecayInput = document.querySelector<HTMLInputElement>("#auto-branch-size-decay")!;
 const autoBranchRecursionInput = document.querySelector<HTMLInputElement>("#auto-branch-recursion")!;
 const finishButton = document.querySelector<HTMLButtonElement>("#finish-points")!;
@@ -133,9 +133,9 @@ function liveParams(parentId: string | undefined): VineParams {
 function autoBranchParams(): { shape: AutoBranchShapeOverrides; recursionDepth: number } {
   return {
     shape: {
-      turns: Number(autoBranchTurnsInput.value),
-      growthRate: Number(autoBranchGrowthRateInput.value),
-      startRadiusFactor: Number(autoBranchStartRadiusInput.value),
+      branchLengthFactor: Number(autoBranchLengthInput.value),
+      endCurvatureFactor: Number(autoBranchGrowthRateInput.value),
+      curvatureExponent: Number(autoBranchCurvatureExponentInput.value),
       sizeDecay: Number(autoBranchSizeDecayInput.value),
     },
     recursionDepth: Number(autoBranchRecursionInput.value),
@@ -500,9 +500,9 @@ for (const input of [spacingInput, thicknessInput]) {
 }
 
 for (const input of [
-  autoBranchTurnsInput,
+  autoBranchLengthInput,
   autoBranchGrowthRateInput,
-  autoBranchStartRadiusInput,
+  autoBranchCurvatureExponentInput,
   autoBranchSizeDecayInput,
   autoBranchRecursionInput,
 ]) {

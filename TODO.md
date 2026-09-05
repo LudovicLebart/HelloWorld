@@ -197,6 +197,37 @@ quand on y revient :
       (rendu de plusieurs combinaisons en SVG statique) plutôt qu'aller-retour complet
       dans l'app à chaque essai. `startRadiusFactor` (2.2→10) déjà relevé en route.
       Voir [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
+- [x] Remplacement du modèle de courbe (spirale logarithmique → clothoïde généralisée) :
+      malgré le recalibrage précédent, le résultat restait "loin de l'objectif" — un
+      agent Sonnet dédié (lancé en tâche de fond, contexte complet : fichiers, historique,
+      diagnostic préliminaire) a confirmé la cause racine : dans `sampleLogSpiral()`,
+      l'angle polaire θ est directement la coordonnée de dessin et avance à pas constant
+      sur `turns·2π` — la courbe boucle donc TOUJOURS intégralement `turns` fois autour
+      de l'origine, quel que soit `growthRate`/`curvatureRampPower` (qui ne pilotaient que
+      la vitesse de décroissance du *rayon* le long de ce parcours déjà figé). Une
+      spirale log à taux constant étant en outre auto-similaire par construction, aucune
+      reparamétrisation ne pouvait produire le profil recherché (courbure quasi nulle au
+      départ, resserrement tardif) — voir la note détaillée dans
+      [Ce qui rend une arabesque gracieuse](docs/explanation/principes-esthetiques.md).
+      Remplacé `core/logSpiral.ts` par `core/curvatureSpiral.ts` : `sampleCurvatureSpiral()`
+      définit la courbe par une loi de courbure κ(s) = endCurvature·(s/length)^curvatureExponent
+      en fonction de la longueur d'arc s (spirale d'Euler/clothoïde généralisée), intégrée
+      numériquement (méthode du point milieu) — κ(0) = 0 par construction, donc plus jamais
+      d'« escargot » dès l'attache, quel que soit `curvatureExponent`. `AUTO_BRANCH` :
+      `turns`/`growthRate`/`startRadiusFactor`/`curvatureRampPower`/`samplesPerTurn`
+      remplacés par `branchLengthFactor` (90)/`endCurvatureFactor` (0.7)/`curvatureExponent`
+      (4)/`curveSteps` (60), calibrés par la même méthode d'exploration numérique rapide que
+      la fois précédente. Curseurs UI remaniés en conséquence (Tours + Taille de départ
+      fusionnés en **Longueur** ; **Progressivité**, nouveau, remplace la constante fixe
+      `curvatureRampPower`) — toujours 5 curseurs, même schéma live. Vérifié visuellement :
+      tendrilles fines, longues, à géométrie fidèle à la description (grand geste ouvert,
+      coil serré seulement à la pointe), y compris avec récursion activée (touffe de
+      spirales imbriquées cohérente). `logSpiral.test.ts` remplacé par
+      `curvatureSpiral.test.ts` (courbure discrète croissante et monotone, retardée par un
+      `curvatureExponent` plus grand — remplace le test "le rayon décroît vers un centre
+      fixe", qui n'avait plus de sens). `branching.test.ts` inchangé (aucune référence aux
+      anciens noms de champs). Voir
+      [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),

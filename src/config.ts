@@ -39,57 +39,56 @@ export const MOTIF_SCALE_RANGE = { min: 4, max: 40 };
 export const MOTIF_JITTER_RANGE = { min: 0, max: 100 };
 
 /** Génération automatique de branches secondaires (volutes) sur la tige sélectionnée — voir
-    core/branching.ts, core/logSpiral.ts et docs/explanation/principes-esthetiques.md pour les
-    principes (rinceau classique, phyllotaxie, spirale logarithmique) dont ces valeurs découlent. */
+    core/branching.ts, core/curvatureSpiral.ts et docs/explanation/principes-esthetiques.md pour les
+    principes (rinceau classique, phyllotaxie, courbure croissante en fonction de la longueur d'arc)
+    dont ces valeurs découlent. */
 export const AUTO_BRANCH = {
   /** Distance (px, longueur d'arc) visée entre deux points d'accroche — la densité réelle suit la
       longueur totale de la tige (arabesque : jamais de segment nu ni surchargé). Relevé à 220 : les
-      volutes étant maintenant beaucoup plus longues (voir `startRadiusFactor`/`turns`), un espacement
+      volutes étant maintenant beaucoup plus longues (voir `branchLengthFactor`), un espacement
       trop serré les ferait se chevaucher. */
   spacing: 220,
   /** Fraction de la longueur totale laissée nue à chaque extrémité — jamais de volute exactement à
       la racine ou à la pointe de la tige. */
   marginFraction: 0.08,
-  /** Nombre de tours (en θ, l'angle qui paramètre la spirale — pas des boucles visuelles complètes :
-      voir `startRadiusFactor` et `curvatureRampPower`) de chaque volute générée. Combiné à
-      `curvatureRampPower`, ce nombre de tours reste modeste (3) : un enroulement complet dès le
-      premier tour lirait comme un cercle fermé (bullseye), pas comme une branche qui s'incurve — voir
-      `curvatureRampPower` pour la répartition de la courbure le long de ces tours. */
-  turns: 3,
-  /** Taux de décroissance du rayon par radian (r = r0·e^(-b·θ)) — plus grand = volute qui se
-      resserre plus vite vers son centre, une fois combiné à `curvatureRampPower` qui retarde ce
-      resserrement vers la fin du parcours plutôt que de l'étaler uniformément sur les `turns` tours. */
-  growthRate: 0.13,
-  /** Rayon de départ de la volute (à l'attache), en multiple de l'épaisseur de la tige parente.
-      Fortement relevé (2.2 → 10) : à l'attache, un grand rayon donne une courbure quasi nulle
-      (presque droite), qui augmente ensuite progressivement à mesure que le rayon décroît — voir
-      `growthRate`. Une volute est maintenant une courbe longue, pas un petit coil compact. */
-  startRadiusFactor: 10,
-  /** Facteur de décroissance géométrique du rayon de départ appliqué à chaque volute suivante le
-      long de la tige (rinceau classique : chaque volute plus petite que la précédente). */
+  /** Longueur d'arc totale d'une volute de génération 0, en multiple de l'épaisseur de la tige
+      parente — le paramètre direct est la longueur, pas un nombre de tours (voir
+      `core/curvatureSpiral.ts` : le nombre de tours visuels résulte de `endCurvatureFactor`/
+      `curvatureExponent`, ce n'est plus un cadran à part). Remplace l'ancien `startRadiusFactor`. */
+  branchLengthFactor: 90,
+  /** Courbure atteinte à la pointe de la volute (s = longueur totale), en multiple de
+      `1/épaisseur de la tige parente` — plus grand = pointe qui s'enroule plus serré. Remplace
+      `growthRate`. */
+  endCurvatureFactor: 0.7,
+  /** Loi de courbure le long du parcours : κ(s) = endCurvature·(s/longueur)^curvatureExponent — voir
+      `core/curvatureSpiral.ts` pour la dérivation. À 1, la courbure croît linéairement avec la
+      longueur parcourue (spirale d'Euler/clothoïde classique) : déjà quasi nulle au départ par
+      construction, donc pas d'« escargot » dès l'attache même à exposant 1. Au-delà de 1 (ici 4),
+      la montée en courbure est explicitement retardée vers la toute dernière portion du parcours :
+      un grand geste presque droit qui ne se met à tourner serré sur lui-même que tard, sur la queue
+      de la volute — remplace `curvatureRampPower`, mais agit enfin sur la courbure réelle plutôt que
+      sur un rayon découplé de la rotation totale (voir la note dans principes-esthetiques.md sur
+      pourquoi une spirale logarithmique classique ne pouvait structurellement pas produire ce
+      profil, quel que soit son paramétrage). */
+  curvatureExponent: 4,
+  /** Facteur de décroissance géométrique appliqué à la longueur (et, en proportion inverse, à la
+      courbure de pointe — voir `buildAutoBranchPoints` dans core/branching.ts) de chaque volute
+      suivante le long de la tige (rinceau classique : chaque volute plus petite que la précédente,
+      et proportionnellement plus resserrée). */
   sizeDecay: 0.85,
   /** Angle (radians) entre la tangente de la tige parente et la tangente de départ d'une volute —
       jamais un raccord tout droit. */
   launchAngle: Math.PI / 2.4,
-  /** Échantillons par tour de spirale. */
-  samplesPerTurn: 10,
-  /** Retarde la décroissance du rayon d'une volute vers la fin de son parcours angulaire plutôt que
-      de la répartir uniformément — voir la doc de `LogSpiralOptions.curvatureRampPower`
-      (core/logSpiral.ts) pour la dérivation exacte. 0 donnerait une spirale log classique
-      auto-similaire : la courbure y croît au même rythme relatif à chaque tour, donc une volute a
-      déjà visiblement tourné plusieurs fois sur elle-même dès son premier tour — un "escargot" dès
-      l'attache. À 4, la même décroissance totale (même rayon final, calibré par `growthRate`/`turns`
-      comme avant) se retrouve concentrée sur la toute dernière portion du parcours : la volute reste
-      à grand rayon (une branche qui s'incurve doucement, sans même refermer son premier tour en
-      cercle) sur l'essentiel de sa longueur, la rotation serrée sur elle-même n'intervenant que tard,
-      sur la queue de la spirale. */
-  curvatureRampPower: 4,
+  /** Pas de l'intégration numérique de la courbe (méthode du point milieu) — remplace
+      `samplesPerTurn`, qui n'a plus de sens puisqu'il n'y a plus de tours fixés d'avance. */
+  curveSteps: 60,
   /** Épaisseur de tige d'une volute auto-générée, en fraction de l'épaisseur de sa liane
       parente (curseur "Épaisseur tige") — une volute est une ramification plus fine que la tige
       qui la porte, jamais le même trait plein qu'elle. N'affecte que le rendu (largeur du
-      polygone de tige, voir addVine dans main.ts) ; le rayon de la spirale elle-même continue de
-      se baser sur l'épaisseur de la tige racine non réduite (voir startRadiusFactor et
-      spawnAutoBranches), pour que la taille des volutes ne se mette pas à décroître deux fois. */
+      polygone de tige, voir addVine dans main.ts) ; la courbure de la spirale elle-même continue de
+      se baser sur l'épaisseur de la tige racine non réduite (voir branchLengthFactor/
+      endCurvatureFactor et spawnAutoBranches), pour que la taille des volutes ne se mette pas à
+      décroître deux fois. */
   stemWidthFactor: 0.4,
   /** Profondeur de récursion des volutes : une volute générée fait pousser ses propres volutes plus
       petites (mêmes règles, appliquées à sa propre courbe), jusqu'à ce niveau de profondeur — la

@@ -70,9 +70,11 @@ utilisateur, plutôt que d'en fixer un nombre arbitraire.
 
 Cinq principes, cinq traductions en règles de génération :
 
-1. **Spirale logarithmique** — les volutes générées automatiquement suivent
-   `r = a·e^(bθ)`, avec `b` comme paramètre de « serrage », plutôt qu'un arc ou une
-   spirale d'Archimède.
+1. **Courbure croissante en fonction de la longueur d'arc** — les volutes générées
+   automatiquement suivent une loi κ(s) = endCurvature·(s/length)^curvatureExponent
+   (une spirale d'Euler/clothoïde généralisée), plutôt qu'une spirale logarithmique
+   classique paramétrée par un angle polaire — voir la note en fin de section pour
+   pourquoi ce choix.
 2. **Ligne de beauté / fairness** — la tige principale, une fois simplifiée (RDP), est
    évaluée (voire relissée) selon la variation de sa courbure avant d'être densifiée :
    peu d'extrema plutôt que fidélité brute au tremblement de la main.
@@ -83,7 +85,7 @@ Cinq principes, cinq traductions en règles de génération :
 5. **Arabesque** — la densité d'embranchement se cale sur la longueur totale du tracé,
    pour ne jamais laisser un segment de tige nu ni sur-charger un segment court.
 
-C'est la base du prototype (`core/branching.ts`, `core/logSpiral.ts`) : un module qui
+C'est la base du prototype (`core/branching.ts`, `core/curvatureSpiral.ts`) : un module qui
 prend la tige existante (`core/spline.ts`) et génère des branches secondaires en
 appliquant ces règles, avant d'habiller le résultat avec le brush existant
 (`core/brush.ts`) — voir
@@ -97,19 +99,40 @@ compositions ne suivent pas cette contrainte — volutes et vrilles s'enroulent
 librement des deux côtés, y compris vers le creux d'un virage. Le côté d'un
 embranchement reste donc une simple alternance gauche/droite (voir 3).
 
-**Nuance sur la spirale logarithmique (principe 1)** : une spirale log à taux de
-croissance `b` constant est *auto-similaire* — la courbure y croît au même rythme
-relatif à chaque tour, quel que soit le nombre de tours déjà parcourus. Appliquée
-telle quelle à une volute générée, cette propriété produit un enroulement déjà
-visiblement serré dès le premier tour (un "escargot" dès l'attache), plutôt qu'une
-branche qui se courbe doucement d'abord et ne se resserre qu'en fin de parcours — ce
-que montrent pourtant les références du moodboard (grand arc ouvert à l'attache,
-rotation serrée réservée à la pointe). `core/logSpiral.ts` retarde donc la
-décroissance du rayon vers la fin du parcours angulaire (`curvatureRampPower`,
-`AUTO_BRANCH` dans `src/config.ts`) plutôt que de l'étaler uniformément sur les tours
-— la volute reste self-similaire une fois figée en fin de parcours (même rayon final
-qu'une spirale log classique de mêmes `growthRate`/`turns`), mais la *répartition* de
-cette décroissance le long du tracé n'est plus uniforme.
+**Pourquoi une spirale logarithmique classique ne suffisait pas (principe 1)** : la
+première version du prototype paramétrait la spirale par un angle polaire θ fixé
+d'avance (`r = r0·e^(-bθ)`, échantillonné à pas d'angle constant sur `turns` tours).
+Une tentative de correction (`curvatureRampPower`, retarder la décroissance du *rayon*
+vers la fin du parcours angulaire) n'a pas suffi : θ restait la coordonnée de dessin
+elle-même, avançant à pas constant indépendamment de la loi de rayon — la courbe
+bouclait donc toujours intégralement `turns` fois autour de l'origine, quel que soit
+`growthRate`/`curvatureRampPower`, qui ne pilotaient que la vitesse de décroissance du
+rayon le long de ce parcours déjà figé, pas la rotation totale elle-même. Plus
+profondément : une spirale log à taux constant est *auto-similaire* par construction
+(courbure proportionnelle à `e^(bθ)`, qui croît au même rythme relatif à chaque tour)
+— aucune reparamétrisation ne peut en sortir, la propriété d'auto-similarité interdit
+structurellement un plateau de courbure quasi nulle suivi d'un resserrement tardif.
+Résultat observé : un enroulement déjà visiblement serré dès le premier tour (un
+"escargot" dès l'attache), au lieu d'une branche qui se courbe doucement d'abord et ne
+se resserre qu'en fin de parcours — ce que montrent pourtant les références du
+moodboard (grand arc ouvert à l'attache, rotation serrée réservée à la pointe).
+
+Solution retenue (analyse conduite avec un agent dédié, comparant plusieurs modèles
+candidats) : définir la courbe directement par une loi de courbure κ(s) en fonction de
+la longueur d'arc s parcourue, plutôt que par un angle polaire fixé d'avance — une
+spirale d'Euler/clothoïde généralisée, κ(s) = endCurvature·(s/length)^curvatureExponent,
+intégrée numériquement (méthode du point milieu, voir `core/curvatureSpiral.ts`). À
+`curvatureExponent = 1`, c'est une clothoïde classique : la courbure croît linéairement
+avec la longueur parcourue, donc déjà quasi nulle au départ par construction
+(continuité C1 **et** C2 avec la tige mère). Au-delà de 1, la montée en courbure est
+explicitement retardée vers la toute dernière portion du parcours — le grand geste
+presque droit suivi d'une rotation serrée tardive recherché. Candidats écartés :
+reparamétrer la spirale log existante en longueur d'arc (cul-de-sac mathématique, ne
+change pas la forme tracée — voir ci-dessus) ; un profil de courbure par easing
+générique (strictement plus général mais sans bénéfice concret pour une UI à
+curseurs) ; un arc large-rayon raccordé à une spirale log serrée (visuellement
+plausible mais seulement C1 à la couture, un à-coup de courbure contraire au critère
+de fairness du point 2).
 
 ## Sources
 
