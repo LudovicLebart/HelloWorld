@@ -54,23 +54,30 @@ export const AUTO_BRANCH = {
   /** Longueur d'arc totale d'une volute de génération 0, en multiple de l'épaisseur de la tige
       parente — le paramètre direct est la longueur, pas un nombre de tours (voir
       `core/curvatureSpiral.ts` : le nombre de tours visuels résulte de `endCurvatureFactor`/
-      `curvatureExponent`, ce n'est plus un cadran à part). Remplace l'ancien `startRadiusFactor`. */
-  branchLengthFactor: 90,
+      `curvatureExponent`, ce n'est plus un cadran à part). Remplace l'ancien `startRadiusFactor`.
+      Réduit (90 → 70) : à 90, le geste presque droit initial restait visiblement trop long avant
+      que la moindre courbure ne devienne perceptible (retour utilisateur sur le rendu déployé). */
+  branchLengthFactor: 70,
   /** Courbure atteinte à la pointe de la volute (s = longueur totale), en multiple de
       `1/épaisseur de la tige parente` — plus grand = pointe qui s'enroule plus serré. Remplace
-      `growthRate`. */
-  endCurvatureFactor: 0.7,
+      `growthRate`. Réduit (0.7 → 0.35) avec `curvatureExponent` (voir plus bas) : ensemble, ils
+      réduisent le nombre total de tours (≈ 2 → ≈ 1,3) pour une pointe qui s'ouvre en un coil net
+      plutôt qu'un petit nœud très serré. */
+  endCurvatureFactor: 0.35,
   /** Loi de courbure le long du parcours : κ(s) = endCurvature·(s/longueur)^curvatureExponent — voir
       `core/curvatureSpiral.ts` pour la dérivation. À 1, la courbure croît linéairement avec la
       longueur parcourue (spirale d'Euler/clothoïde classique) : déjà quasi nulle au départ par
-      construction, donc pas d'« escargot » dès l'attache même à exposant 1. Au-delà de 1 (ici 4),
-      la montée en courbure est explicitement retardée vers la toute dernière portion du parcours :
-      un grand geste presque droit qui ne se met à tourner serré sur lui-même que tard, sur la queue
-      de la volute — remplace `curvatureRampPower`, mais agit enfin sur la courbure réelle plutôt que
-      sur un rayon découplé de la rotation totale (voir la note dans principes-esthetiques.md sur
-      pourquoi une spirale logarithmique classique ne pouvait structurellement pas produire ce
-      profil, quel que soit son paramétrage). */
-  curvatureExponent: 4,
+      construction, donc pas d'« escargot » dès l'attache même à exposant 1. Au-delà de 1, la montée
+      en courbure est explicitement retardée vers la dernière portion du parcours : un geste presque
+      droit qui ne se met à tourner serré sur lui-même que plus tard, sur la queue de la volute —
+      remplace `curvatureRampPower`, mais agit enfin sur la courbure réelle plutôt que sur un rayon
+      découplé de la rotation totale (voir la note dans principes-esthetiques.md sur pourquoi une
+      spirale logarithmique classique ne pouvait structurellement pas produire ce profil, quel que
+      soit son paramétrage). Réduit (4 → 2) avec `endCurvatureFactor` : à 4, une fois la courbure
+      enfin amorcée elle montait trop vite vers sa valeur finale (« la spirale va trop vite » — même
+      retour utilisateur) ; à 2, la transition reste progressive au lieu de se resserrer d'un coup
+      en fin de parcours. */
+  curvatureExponent: 2,
   /** Facteur de décroissance géométrique appliqué à la longueur (et, en proportion inverse, à la
       courbure de pointe — voir `buildAutoBranchPoints` dans core/branching.ts) de chaque volute
       suivante le long de la tige (rinceau classique : chaque volute plus petite que la précédente,

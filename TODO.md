@@ -215,19 +215,28 @@ quand on y revient :
       numériquement (méthode du point milieu) — κ(0) = 0 par construction, donc plus jamais
       d'« escargot » dès l'attache, quel que soit `curvatureExponent`. `AUTO_BRANCH` :
       `turns`/`growthRate`/`startRadiusFactor`/`curvatureRampPower`/`samplesPerTurn`
-      remplacés par `branchLengthFactor` (90)/`endCurvatureFactor` (0.7)/`curvatureExponent`
-      (4)/`curveSteps` (60), calibrés par la même méthode d'exploration numérique rapide que
-      la fois précédente. Curseurs UI remaniés en conséquence (Tours + Taille de départ
-      fusionnés en **Longueur** ; **Progressivité**, nouveau, remplace la constante fixe
-      `curvatureRampPower`) — toujours 5 curseurs, même schéma live. Vérifié visuellement :
-      tendrilles fines, longues, à géométrie fidèle à la description (grand geste ouvert,
-      coil serré seulement à la pointe), y compris avec récursion activée (touffe de
-      spirales imbriquées cohérente). `logSpiral.test.ts` remplacé par
+      remplacés par `branchLengthFactor`/`endCurvatureFactor`/`curvatureExponent`/
+      `curveSteps` (60), calibrés par exploration numérique rapide (SVG statique, plusieurs
+      combinaisons) plutôt qu'aller-retour complet dans l'app à chaque essai. Curseurs UI
+      remaniés en conséquence (Tours + Taille de départ fusionnés en **Longueur** ;
+      **Progressivité**, nouveau, remplace la constante fixe `curvatureRampPower`) —
+      toujours 5 curseurs, même schéma live. `logSpiral.test.ts` remplacé par
       `curvatureSpiral.test.ts` (courbure discrète croissante et monotone, retardée par un
       `curvatureExponent` plus grand — remplace le test "le rayon décroît vers un centre
       fixe", qui n'avait plus de sens). `branching.test.ts` inchangé (aucune référence aux
       anciens noms de champs). Voir
       [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
+- [x] Recalibrage du profil de courbure (`branchLengthFactor` 90→70, `endCurvatureFactor`
+      0.7→0.35, `curvatureExponent` 4→2) : premier réglage de la clothoïde jugé "mieux mais
+      loin de l'objectif" — le geste presque droit restait trop long, et une fois la
+      courbure amorcée elle montait trop vite vers sa valeur finale ("la spirale va trop
+      vite"). Nouvelle exploration numérique rapide (mêmes 6 candidats comparés en SVG
+      statique) : réduire `curvatureExponent` raccourcit la fraction de longueur restant
+      quasi droite avant que la courbure ne devienne perceptible ; réduire `endCurvatureFactor`
+      en proportion réduit le nombre total de tours (≈ 2 → ≈ 1,3) pour une pointe qui
+      s'ouvre en un coil net plutôt qu'un petit nœud très serré. Vérifié visuellement :
+      geste initial nettement plus court, transition progressive vers un coil ouvert plutôt
+      qu'un resserrement brutal en fin de parcours.
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
