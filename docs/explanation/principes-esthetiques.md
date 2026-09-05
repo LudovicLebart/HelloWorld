@@ -97,6 +97,20 @@ compositions ne suivent pas cette contrainte — volutes et vrilles s'enroulent
 librement des deux côtés, y compris vers le creux d'un virage. Le côté d'un
 embranchement reste donc une simple alternance gauche/droite (voir 3).
 
+**Nuance sur la spirale logarithmique (principe 1)** : une spirale log à taux de
+croissance `b` constant est *auto-similaire* — la courbure y croît au même rythme
+relatif à chaque tour, quel que soit le nombre de tours déjà parcourus. Appliquée
+telle quelle à une volute générée, cette propriété produit un enroulement déjà
+visiblement serré dès le premier tour (un "escargot" dès l'attache), plutôt qu'une
+branche qui se courbe doucement d'abord et ne se resserre qu'en fin de parcours — ce
+que montrent pourtant les références du moodboard (grand arc ouvert à l'attache,
+rotation serrée réservée à la pointe). `core/logSpiral.ts` retarde donc la
+décroissance du rayon vers la fin du parcours angulaire (`curvatureRampPower`,
+`AUTO_BRANCH` dans `src/config.ts`) plutôt que de l'étaler uniformément sur les tours
+— la volute reste self-similaire une fois figée en fin de parcours (même rayon final
+qu'une spirale log classique de mêmes `growthRate`/`turns`), mais la *répartition* de
+cette décroissance le long du tracé n'est plus uniforme.
+
 ## Sources
 
 - [Golden spiral — Wikipedia](https://en.wikipedia.org/wiki/Golden_spiral)

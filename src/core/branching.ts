@@ -66,7 +66,7 @@ export function buildAutoBranchPoints(
   generationIndex: number,
   overrides?: AutoBranchShapeOverrides,
 ): Point[] {
-  const { launchAngle, samplesPerTurn } = AUTO_BRANCH;
+  const { launchAngle, samplesPerTurn, curvatureRampPower } = AUTO_BRANCH;
   const { turns, growthRate, startRadiusFactor, sizeDecay } = { ...AUTO_BRANCH, ...overrides };
   const startRadius = stemWidth * startRadiusFactor * Math.pow(sizeDecay, generationIndex);
   const spiral = sampleLogSpiral({
@@ -75,6 +75,7 @@ export function buildAutoBranchPoints(
     startRadius,
     samplesPerTurn,
     clockwise: attachment.side === -1,
+    curvatureRampPower,
   });
 
   const mainAngle = Math.atan2(attachment.tangent.y, attachment.tangent.x);

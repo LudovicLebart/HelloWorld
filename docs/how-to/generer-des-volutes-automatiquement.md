@@ -6,13 +6,18 @@ secondaires en forme de volute, générées algorithmiquement — voir
 les principes (spirale logarithmique, rinceau, phyllotaxie) dont les règles
 appliquées sont issues.
 
-Les réglages par défaut sont actuellement calibrés sur la planche 3 de la galerie
+Les réglages par défaut ont depuis été recalibrés : les volutes sont maintenant plus
+fines (voir **Épaisseur** plus bas) et beaucoup plus longues, avec une courbure
+progressive — un grand arc ouvert, presque droit à l'attache, qui se resserre de plus
+en plus, la rotation serrée sur elle-même n'intervenant que tard, sur la toute
+dernière portion. Avant ce recalibrage, les volutes étaient de simples spirales
+logarithmiques auto-similaires : la courbure y croissait au même rythme relatif à
+chaque tour, ce qui leur donnait l'aspect d'un "escargot" dès l'attache plutôt que
+celui d'une branche qui s'incurve. Étape précédente : planche 3 de la galerie
 « Planches Volutes » (moodboard publié en Artifact — vrille fine, tendeurs fins et
-nombreux, feuillage clairsemé) : volutes petites et fréquentes, sans récursion, motif
-Feuille seul actif au démarrage. Étape précédente : planche 5 (trait calligraphique
-pur, sans feuillage, quelques grandes boucles ouvertes) — toujours atteignable en
-poussant **Taille de départ** et en réduisant l'espacement des points d'accroche
-(constante `AUTO_BRANCH.spacing`, non exposée en curseur) et en décochant Feuille.
+nombreux, feuillage clairsemé), elle-même après planche 5 (trait calligraphique pur,
+sans feuillage, quelques grandes boucles ouvertes) — toujours atteignables en ajustant
+les curseurs ci-dessous et en décochant/cochant Feuille.
 
 ## Utilisation
 
@@ -26,6 +31,9 @@ la liane sélectionnée, sans avoir à recliquer sur un bouton.
 - **Tours** — nombre de tours de chaque volute.
 - **Resserrement** — vitesse à laquelle la spirale se referme sur son centre ; plus
   bas donne des boucles ouvertes et bien distinctes, plus haut une pelote plus serrée.
+  Combiné à la répartition de la courbure (constante `AUTO_BRANCH.curvatureRampPower`,
+  non exposée en curseur — voir plus bas), ce resserrement reste concentré sur la
+  toute dernière portion du parcours plutôt que réparti uniformément sur les **Tours**.
 - **Taille de départ** — rayon de la première volute, en multiple de l'épaisseur de
   la tige qui la porte (curseur **Épaisseur tige**).
 - **Décroissance** — à quel point chaque volute suivante (le long de la tige, ou
@@ -58,12 +66,22 @@ totalement les motifs (comme pour calibrer sur la planche 5) reste un état lég
 séquence vide comme « pas de motif », pas comme un repli à corriger — mais demande de
 modifier `main.ts` tant que le panneau reste masqué.
 
+## Épaisseur
+
+Une volute auto-générée est rendue avec une tige plus fine que celle qui la porte
+(`AUTO_BRANCH.stemWidthFactor`, actuellement 0.4 — c'est-à-dire 40 % de l'épaisseur du
+curseur **Épaisseur tige**) : une ramification, pas le même trait plein que la tige
+principale. Ce facteur n'affecte que le rendu — le rayon de la spirale elle-même
+continue de se baser sur l'épaisseur de la tige racine non réduite, pour que la taille
+des volutes ne décroisse pas deux fois le long d'une même tige.
+
 ## Ce qui reste fixe
 
 L'espacement entre points d'accroche, la marge aux extrémités de la tige, l'angle de
-raccord et la finesse d'échantillonnage de chaque spirale restent des constantes
-fixes (`AUTO_BRANCH` dans `src/config.ts`) — moins déterminantes pour l'aspect général
-que les cinq curseurs ci-dessus, exposables plus tard si besoin.
+raccord, la finesse d'échantillonnage de chaque spirale et la répartition de la
+courbure le long du parcours (`curvatureRampPower` — voir plus haut) restent des
+constantes fixes (`AUTO_BRANCH` dans `src/config.ts`) — moins déterminantes pour
+l'aspect général que les cinq curseurs ci-dessus, exposables plus tard si besoin.
 
 ## Limite connue
 

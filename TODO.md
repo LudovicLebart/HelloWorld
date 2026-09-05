@@ -178,6 +178,25 @@ quand on y revient :
       garder le feuillage clairsemé plutôt que dense sur la tige principale.
       Volontairement pas encore de regroupement explicite de feuilles aux points
       d'embranchement (item suivant) — à réévaluer si ce réglage seul ne suffit pas.
+- [x] Volutes plus fines, plus longues, courbure progressive : retour utilisateur
+      sur le rendu déployé — les volutes devaient être plus fines que la tige qui
+      les porte, beaucoup plus longues, et se courber doucement d'abord (grand arc
+      quasi droit à l'attache) plutôt que de tourner déjà serré sur elles-mêmes dès
+      le premier tour (« escargot »), la rotation serrée n'intervenant que tard, sur
+      la toute dernière portion. Trois changements : (1) `AUTO_BRANCH.stemWidthFactor`
+      (nouveau, 0.4) — `addVine()` dans `main.ts` réduit l'épaisseur d'une volute
+      auto-générée à cette fraction de celle de sa tige porteuse, sans toucher au
+      rayon de la spirale (qui reste basé sur l'épaisseur de la tige racine, voir
+      `spawnAutoBranches`) ; (2) `LogSpiralOptions.curvatureRampPower` (nouveau,
+      `core/logSpiral.ts`) — retarde la décroissance du rayon vers la fin du parcours
+      angulaire plutôt que de la répartir uniformément (spirale log classique
+      auto-similaire), voir la note ajoutée dans
+      [Ce qui rend une arabesque gracieuse](docs/explanation/principes-esthetiques.md) ;
+      (3) recalibrage `turns` (5 en cours de route, stabilisé à 3) / `growthRate`
+      (0.07→0.13) / `curvatureRampPower` (4) trouvé par exploration numérique rapide
+      (rendu de plusieurs combinaisons en SVG statique) plutôt qu'aller-retour complet
+      dans l'app à chaque essai. `startRadiusFactor` (2.2→10) déjà relevé en route.
+      Voir [Générer des volutes automatiquement](docs/how-to/generer-des-volutes-automatiquement.md).
 - [ ] Feuilles groupées aux points d'embranchement (2 à 4 ensemble) plutôt
       qu'espacées uniformément le long de toute la tige comme le fait `placeBrush`
       aujourd'hui — changement plus profond, touche au brush existant (`core/brush.ts`),
